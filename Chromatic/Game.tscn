@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://Actors/Map/Map.tscn" type="PackedScene" id=1]
 [ext_resource path="res://Game.gd" type="Script" id=2]
 [ext_resource path="res://UI/UnitPortrait/UnitPortrait.tscn" type="PackedScene" id=3]
 [ext_resource path="res://UI/Ability/AbilityButton.tscn" type="PackedScene" id=4]
 [ext_resource path="res://Camera2D.gd" type="Script" id=5]
+[ext_resource path="res://DebugPlayerLabel.gd" type="Script" id=6]
 
 [node name="Game" type="Node"]
 script = ExtResource( 2 )
@@ -27,6 +28,35 @@ margin_bottom = 0.0
 
 [node name="AbilityButton" parent="UI" instance=ExtResource( 4 )]
 visible = false
+
+[node name="DebugPlayerLabel" type="Label" parent="UI"]
+anchor_left = 1.0
+anchor_right = 1.0
+margin_left = -76.3577
+margin_top = 17.6328
+margin_right = -15.3577
+margin_bottom = 31.6328
+text = "Player 1"
+script = ExtResource( 6 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="EndTurnButton" type="Button" parent="UI"]
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+margin_left = -128.0
+margin_top = -20.0
+margin_bottom = 20.0
+text = "End Turn"
+__meta__ = {
+"_edit_group_": true,
+"_edit_use_anchors_": false
+}
+[connection signal="new_player_turn" from="Map" to="UI/DebugPlayerLabel" method="_on_Map_new_player_turn"]
 [connection signal="unit_deselected" from="Map" to="." method="_on_Map_unit_deselected"]
 [connection signal="unit_selected" from="Map" to="." method="_on_Map_unit_selected"]
 [connection signal="pressed" from="UI/AbilityButton" to="Map" method="_on_AbilityButton_pressed"]
+[connection signal="pressed" from="UI/EndTurnButton" to="Map" method="_on_EndTurnButton_pressed"]

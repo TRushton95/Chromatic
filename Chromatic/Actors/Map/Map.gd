@@ -27,10 +27,14 @@ var tile_lookup = {}
 var astar = AStar2D.new()
 var tile_path_highlight = []
 var previous_hovered_tile : Tile
+var player_turn = 1
+var number_of_players = 2
 
 #Signals
 signal unit_selected
 signal unit_deselected
+signal new_player_turn
+signal new_game_turn
 
 
 #Event Handlers
@@ -93,8 +97,14 @@ func _on_tile_right_mouse_released(coordinates: Vector2) -> void:
 	
 	var battle_result = _attack(selected_unit, target_tile.occupant)
 	_resolve_attack(selected_unit, target_tile.occupant, battle_result)
+
+
+func _on_EndTurnButton_pressed() -> void:
+	player_turn += 1
+	if player_turn > number_of_players:
+		player_turn = 1
 	
-			
+	emit_signal("new_player_turn", player_turn)
 
 
 func _on_AbilityButton_pressed() -> void:

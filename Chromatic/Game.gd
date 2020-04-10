@@ -27,3 +27,7 @@ func _on_Map_unit_selected(unit) -> void:
 func _on_Map_unit_deselected() -> void:
 	unit_portrait.visible = false
 	ability_button.visible = false
+
+
+func _on_EndTurnButton_pressed() -> void:
+	pass # Replace with function body.
