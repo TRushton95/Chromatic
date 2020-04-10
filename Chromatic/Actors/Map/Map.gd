@@ -7,6 +7,7 @@ var tile_scene = preload("res://Actors/Tiles/Tile.tscn")
 #Unit Scenes
 var settler_scene = preload("res://Actors/Units/Settler/Settler.tscn")
 var warrior_scene = preload("res://Actors/Units/Warrior/Warrior.tscn")
+var archer_scene = preload("res://Actors/Units/Archer/Archer.tscn")
 
 #Building Scenes
 var settlement_scene = preload("res://Actors/Buildings/Settlement/Settlement.tscn")
@@ -15,7 +16,7 @@ var settlement_scene = preload("res://Actors/Buildings/Settlement/Settlement.tsc
 const TILE_DIAMETER = 64
 
 #Enums
-enum UNIT_TYPE { SETTLER, WARRIOR }
+enum UNIT_TYPE { SETTLER, WARRIOR, ARCHER }
 enum BATTLE_RESULT { NONE_DIED, ATTACKER_DIED, DEFENDER_DIED, BOTH_DIED }
 
 #Fields
@@ -114,6 +115,7 @@ func _on_AbilityButton_pressed() -> void:
 func _ready() -> void:
 	_generate_test_map()
 	_spawn_unit(UNIT_TYPE.SETTLER, "Settler", Vector2(0,0), 1)
+	_spawn_unit(UNIT_TYPE.ARCHER, "Archer", Vector2(7, 7), 1)
 	_spawn_unit(UNIT_TYPE.WARRIOR, "Warrior", Vector2(5,5), 2)
 
 
@@ -251,6 +253,8 @@ func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: 
 			unit.connect("build_settlement", self, "_on_build_settlement")
 		UNIT_TYPE.WARRIOR:
 			unit = warrior_scene.instance()
+		UNIT_TYPE.ARCHER:
+			unit = archer_scene.instance()
 		_:
 			print("Cannot locate unit type " + str(unit_type) + " to spawn")
 			return
@@ -274,22 +278,27 @@ func _despawn_unit(unit: Unit) -> void:
 
 #Returns an enum flag indicating who died in the battle
 func _attack(attacker: Unit, defender: Unit) -> int:
-	defender.current_health -= attacker.attack_damage
-	attacker.current_health -= defender.attack_damage
-	
+	_deal_damage(attacker, defender)
+	if attacker.attack_range == 0:
+		_deal_damage(defender, attacker)
+
 	var attacker_died = attacker.current_health == 0
 	var defender_died = defender.current_health == 0
-	
+
 	var result = BATTLE_RESULT.NONE_DIED
-	
+
 	if attacker_died && defender_died:
 		result = BATTLE_RESULT.BOTH_DIED
 	elif attacker_died:
 		result = BATTLE_RESULT.ATTACKER_DIED
 	elif defender_died:
 		result = BATTLE_RESULT.DEFENDER_DIED
-	
+
 	return result
+
+
+func _deal_damage(from: Unit, to: Unit):
+	to.current_health -= from.attack_damage
 
 
 #Resolves the units based on the battle result enum from the _attack method
@@ -300,7 +309,8 @@ func _resolve_attack(attacker: Unit, defender: Unit, battle_result: int):
 	if battle_result == BATTLE_RESULT.DEFENDER_DIED:
 		var defender_tile = _get_tile(defender.coordinates.x, defender.coordinates.y)
 		_despawn_unit(defender)
-		_traverse_to_path(attacker, defender_tile.coordinates.x, defender_tile.coordinates.y)
+		if attacker.attack_range == 0:
+			_traverse_to_path(attacker, defender_tile.coordinates.x, defender_tile.coordinates.y)
 	
 	if battle_result == BATTLE_RESULT.BOTH_DIED:
 		_despawn_unit(attacker)
