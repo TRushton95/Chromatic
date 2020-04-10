@@ -122,15 +122,10 @@ func _process(_delta: float) -> void:
 		_clear_tile_path()
 		
 	if Input.is_action_just_pressed("cancel") && selected_unit:
+		selected_unit.hide_health_bar()
 		_get_tile(selected_unit.coordinates.x, selected_unit.coordinates.y).hide_yellow_filter()
 		selected_unit = null
 		emit_signal("unit_deselected")
-	
-	if selected_unit && Input.is_action_just_pressed("test_build_action"):
-		var settlement = settlement_scene.instance()
-		settlement.coordinates = selected_unit.coordinates
-		settlement.position = selected_unit.position
-		add_child(settlement)
 
 
 func _generate_test_map():
