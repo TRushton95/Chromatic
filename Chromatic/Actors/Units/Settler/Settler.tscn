@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://Assets/Units/Settler.png" type="Texture" id=1]
+[ext_resource path="res://Actors/Units/Settler/Settler.gd" type="Script" id=2]
+[ext_resource path="res://UI/HealthBar/HealthBar.tscn" type="PackedScene" id=3]
+
+[node name="Settler" type="Node2D"]
+script = ExtResource( 2 )
+
+[node name="HealthBar" parent="." instance=ExtResource( 3 )]
+margin_left = -16.0
+margin_top = -32.0
+margin_right = -16.0
+margin_bottom = -32.0
+
+[node name="Sprite" type="Sprite" parent="."]
+texture = ExtResource( 1 )
