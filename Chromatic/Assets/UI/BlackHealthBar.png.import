@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/RedHealthBar.png-4e7e95105a6e0dceaa685f838c6ef1be.stex"
+path="res://.import/BlackHealthBar.png-da9ad2ec0521c5b88f1ea36d340fb008.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/UI/RedHealthBar.png"
-dest_files=[ "res://.import/RedHealthBar.png-4e7e95105a6e0dceaa685f838c6ef1be.stex" ]
+source_file="res://Assets/UI/BlackHealthBar.png"
+dest_files=[ "res://.import/BlackHealthBar.png-da9ad2ec0521c5b88f1ea36d340fb008.stex" ]
 
 [params]
 

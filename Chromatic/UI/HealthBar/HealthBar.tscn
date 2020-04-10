@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=2]
 
-[ext_resource path="res://Assets/UI/GreenHealthBar.png" type="Texture" id=1]
-[ext_resource path="res://Assets/UI/RedHealthBar.png" type="Texture" id=2]
+[ext_resource path="res://Assets/UI/WhiteHealthBar.png" type="Texture" id=1]
+[ext_resource path="res://Assets/UI/BlackHealthBar.png" type="Texture" id=2]
 [ext_resource path="res://Assets/UI/HealthBarBorder.png" type="Texture" id=3]
 [ext_resource path="res://UI/HealthBar/HealthBar.gd" type="Script" id=4]
 
@@ -18,6 +18,9 @@ __meta__ = {
 margin_right = 34.0
 margin_bottom = 6.0
 texture = ExtResource( 3 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="TextureProgress" type="TextureProgress" parent="."]
 margin_left = 1.0

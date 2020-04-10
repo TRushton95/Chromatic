@@ -7,8 +7,13 @@ export var attack_damage = 0
 export var attack_range = 0
 export var can_attack = false
 var current_health setget current_health_set
-var team = -1
+var team = -1 setget team_set
 var coordinates = Vector2(-1, -1)
+
+var team_colors = {
+	1: Color(0, 1, 0 ),
+	2: Color(1, 0, 0 )
+}
 
 
 #Methods
@@ -30,6 +35,12 @@ func current_health_set(health: int) -> void:
 		current_health = max_health
 		
 	get_node("HealthBar").set_value(current_health)
+
+
+func team_set(team_number: int) -> void:
+	team = team_number
+	var team_color = team_colors[team]
+	get_node("HealthBar").set_color(team_color)
 
 
 func show_health_bar() -> void:
