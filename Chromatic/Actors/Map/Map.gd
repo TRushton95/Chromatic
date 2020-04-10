@@ -27,6 +27,7 @@ var tile_lookup = {}
 var astar = AStar2D.new()
 var tile_path_highlight = []
 var previous_hovered_tile : Tile
+var game_turn = 1
 var player_turn = 1
 var number_of_players = 2
 
@@ -41,19 +42,18 @@ signal new_game_turn
 func _on_tile_clicked(coordinates : Vector2) -> void:
 	var tile = _get_tile(coordinates.x, coordinates.y)
 	
-	if !tile:
+	if !tile || !tile.occupant || tile.occupant.team != player_turn:
 		return
 	
-	if tile.occupant:
-		if selected_unit:
-			var selected_unit_tile = _get_tile(selected_unit.coordinates.x, selected_unit.coordinates.y)
-			
-			selected_unit_tile.hide_yellow_filter()
-			selected_unit.hide_health_bar()
+	if selected_unit:
+		var selected_unit_tile = _get_tile(selected_unit.coordinates.x, selected_unit.coordinates.y)
 		
-		selected_unit = tile.occupant
-		tile.show_yellow_filter()
-		emit_signal("unit_selected", tile.occupant)
+		selected_unit_tile.hide_yellow_filter()
+		selected_unit.hide_health_bar()
+	
+	selected_unit = tile.occupant
+	tile.show_yellow_filter()
+	emit_signal("unit_selected", tile.occupant)
 
 
 func _on_tile_hovered(coordinates: Vector2) -> void:
@@ -100,11 +100,7 @@ func _on_tile_right_mouse_released(coordinates: Vector2) -> void:
 
 
 func _on_EndTurnButton_pressed() -> void:
-	player_turn += 1
-	if player_turn > number_of_players:
-		player_turn = 1
-	
-	emit_signal("new_player_turn", player_turn)
+	_end_turn()
 
 
 func _on_AbilityButton_pressed() -> void:
@@ -253,6 +249,14 @@ func _map_path(from: Vector2, to: Vector2) -> void:
 		var tile = _get_tile(point.x, point.y)
 		tile.show_white_filter()
 		tile_path_highlight.push_back(tile)
+		
+func _end_turn() -> void:
+	player_turn += 1
+	if player_turn > number_of_players:
+		player_turn = 1
+		game_turn += 1
+	
+	emit_signal("new_player_turn", player_turn)
 		
 func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: int) -> void:
 	var unit
