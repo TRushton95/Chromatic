@@ -45,15 +45,7 @@ func _on_tile_clicked(coordinates : Vector2) -> void:
 	if !tile || !tile.occupant || tile.occupant.team != player_turn:
 		return
 	
-	if selected_unit:
-		var selected_unit_tile = _get_tile(selected_unit.coordinates.x, selected_unit.coordinates.y)
-		
-		selected_unit_tile.hide_yellow_filter()
-		selected_unit.hide_health_bar()
-	
-	selected_unit = tile.occupant
-	tile.show_yellow_filter()
-	emit_signal("unit_selected", tile.occupant)
+	_select_unit_at_tile(coordinates)
 
 
 func _on_tile_hovered(coordinates: Vector2) -> void:
@@ -129,11 +121,8 @@ func _process(_delta: float) -> void:
 	if Input.is_action_just_released("right_mouse"):
 		_clear_tile_path()
 		
-	if Input.is_action_just_pressed("cancel") && selected_unit:
-		selected_unit.hide_health_bar()
-		_get_tile(selected_unit.coordinates.x, selected_unit.coordinates.y).hide_yellow_filter()
-		selected_unit = null
-		emit_signal("unit_deselected")
+	if Input.is_action_just_pressed("cancel"):
+		_deselect_unit()
 
 
 func _generate_test_map():
@@ -249,15 +238,38 @@ func _map_path(from: Vector2, to: Vector2) -> void:
 		var tile = _get_tile(point.x, point.y)
 		tile.show_white_filter()
 		tile_path_highlight.push_back(tile)
-		
+
+
 func _end_turn() -> void:
 	player_turn += 1
 	if player_turn > number_of_players:
 		player_turn = 1
 		game_turn += 1
 	
+	_deselect_unit()
 	emit_signal("new_player_turn", player_turn)
+
+
+func _select_unit_at_tile(coordinates: Vector2) -> void:
+	_deselect_unit()
+	
+	var tile = _get_tile(coordinates.x, coordinates.y)
+	selected_unit = tile.occupant
+	tile.show_yellow_filter()
+	emit_signal("unit_selected", tile.occupant)
+
+
+func _deselect_unit() -> void:
+	if !selected_unit:
+		return
 		
+	var selected_unit_tile = _get_tile(selected_unit.coordinates.x, selected_unit.coordinates.y)
+	
+	selected_unit_tile.hide_yellow_filter()
+	selected_unit.hide_health_bar()
+	emit_signal("unit_deselected")
+
+
 func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: int) -> void:
 	var unit
 	
