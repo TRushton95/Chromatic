@@ -81,10 +81,18 @@ func _on_tile_right_mouse_released(coordinates: Vector2) -> void:
 	
 	if !target_tile.occupant:
 		_traverse_to_path(selected_unit, coordinates.x, coordinates.y)
-	else:
-		if selected_unit.team != target_tile.occupant.team:
-			var battle_result = _attack(selected_unit, target_tile.occupant)
-			_resolve_attack(selected_unit, target_tile.occupant, battle_result)
+		return
+	
+	if selected_unit.team == target_tile.occupant.team:
+		return
+	
+	if !selected_unit.can_attack:
+		print("This unit cannot attack!")
+		return
+	
+	var battle_result = _attack(selected_unit, target_tile.occupant)
+	_resolve_attack(selected_unit, target_tile.occupant, battle_result)
+	
 			
 
 
