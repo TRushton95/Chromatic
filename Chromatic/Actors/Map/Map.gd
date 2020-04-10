@@ -50,8 +50,8 @@ func _on_tile_clicked(coordinates : Vector2) -> void:
 
 func _on_tile_hovered(coordinates: Vector2) -> void:
 	var hovered_tile = _get_tile(coordinates)
-	if hovered_tile && hovered_tile.occupant != null:
-		hovered_tile.occupant.show_health_bar()
+#	if hovered_tile && hovered_tile.occupant != null:
+#		hovered_tile.occupant.show_health_bar()
 		
 	if Input.is_mouse_button_pressed(BUTTON_RIGHT):
 		_clear_tile_path()
@@ -61,8 +61,8 @@ func _on_tile_hovered(coordinates: Vector2) -> void:
 
 func _on_tile_unhovered(coordinates: Vector2) -> void:
 	var hovered_tile = _get_tile(coordinates)
-	if hovered_tile && hovered_tile.occupant  && hovered_tile.occupant != selected_unit:
-		hovered_tile.occupant.hide_health_bar()
+#	if hovered_tile && hovered_tile.occupant  && hovered_tile.occupant != selected_unit:
+#		hovered_tile.occupant.hide_health_bar()
 
 
 func _on_tile_right_clicked(coordinates: Vector2) -> void:
@@ -266,7 +266,7 @@ func _deselect_unit() -> void:
 	var selected_unit_tile = _get_tile(selected_unit.coordinates)
 	
 	selected_unit_tile.hide_yellow_filter()
-	selected_unit.hide_health_bar()
+#	selected_unit.hide_health_bar()
 	emit_signal("unit_deselected")
 
 
