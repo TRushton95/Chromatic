@@ -40,7 +40,7 @@ signal new_game_turn
 
 #Event Handlers
 func _on_tile_clicked(coordinates : Vector2) -> void:
-	var tile = _get_tile(coordinates.x, coordinates.y)
+	var tile = _get_tile(coordinates)
 	
 	if !tile || !tile.occupant || tile.occupant.team != player_turn:
 		return
@@ -49,7 +49,7 @@ func _on_tile_clicked(coordinates : Vector2) -> void:
 
 
 func _on_tile_hovered(coordinates: Vector2) -> void:
-	var hovered_tile = _get_tile(coordinates.x, coordinates.y)
+	var hovered_tile = _get_tile(coordinates)
 	if hovered_tile && hovered_tile.occupant != null:
 		hovered_tile.occupant.show_health_bar()
 		
@@ -60,7 +60,7 @@ func _on_tile_hovered(coordinates: Vector2) -> void:
 
 
 func _on_tile_unhovered(coordinates: Vector2) -> void:
-	var hovered_tile = _get_tile(coordinates.x, coordinates.y)
+	var hovered_tile = _get_tile(coordinates)
 	if hovered_tile && hovered_tile.occupant  && hovered_tile.occupant != selected_unit:
 		hovered_tile.occupant.hide_health_bar()
 
@@ -74,7 +74,7 @@ func _on_tile_right_mouse_released(coordinates: Vector2) -> void:
 	if !selected_unit:
 		return
 	
-	var target_tile = _get_tile(coordinates.x, coordinates.y)
+	var target_tile = _get_tile(coordinates)
 	
 	if !target_tile.occupant:
 		_traverse_to_path(selected_unit, coordinates.x, coordinates.y)
@@ -96,7 +96,7 @@ func _on_EndTurnButton_pressed() -> void:
 
 
 func _on_AbilityButton_pressed() -> void:
-	var tile = _get_tile(selected_unit.coordinates.x, selected_unit.coordinates.y)
+	var tile = _get_tile(selected_unit.coordinates)
 	
 	if tile.building:
 		print("Cannot build on tile " + str(tile.coordinates) + ". A building already exists there!")
@@ -131,7 +131,7 @@ func _generate_test_map():
 	for y in rows:
 		for x in columns:
 			var tile = tile_scene.instance()
-			tile.set_name(_tile_name(x, y))
+			tile.set_name(_tile_name(Vector2(x, y)))
 			tile.position = Vector2(x * TILE_DIAMETER, y * TILE_DIAMETER * 0.75)
 			tile.position += Vector2(TILE_DIAMETER / 2.0, TILE_DIAMETER / 2.0) # offset from 0
 			tile.coordinates = Vector2(x, y)
@@ -148,7 +148,7 @@ func _generate_test_map():
 			tile.connect("tile_hovered", self, "_on_tile_hovered")
 			tile.connect("tile_unhovered", self, "_on_tile_unhovered")
 			tile.connect("tile_right_mouse_released", self, "_on_tile_right_mouse_released")
-			tile_lookup[_tile_name(x, y)] = tile
+			tile_lookup[_tile_name(Vector2(x, y))] = tile
 			add_child(tile)
 			
 			id += 1
@@ -160,23 +160,23 @@ func _generate_test_map():
 
 func _connect_to_adjacent_tiles(tile):
 	for adj_tile_coords in tile.get_adjacent_tiles():
-		var adj_tile_key = _tile_name(adj_tile_coords.x, adj_tile_coords.y)
+		var adj_tile_key = _tile_name(adj_tile_coords)
 		
 		if (tile_lookup.has(adj_tile_key)):
 			var adj_tile = tile_lookup[adj_tile_key]
 			astar.connect_points(tile.id, adj_tile.id)
 
-func _tile_name(x, y) -> String:
-	return "tile_" + str(x) + "," + str(y)
+func _tile_name(coordinates: Vector2) -> String:
+	return "tile_" + str(coordinates.x) + "," + str(coordinates.y)
 
 
-func _get_tile(x, y) -> Node:
-	return get_node(_tile_name(x, y))
+func _get_tile(coordinates: Vector2) -> Node:
+	return get_node(_tile_name(coordinates))
 
 
-func _try_place_building(building, x, y) -> bool:
+func _try_place_building(building, dest_coordinates: Vector2) -> bool:
 	var result = false
-	var tile = _get_tile(x, y)
+	var tile = _get_tile(dest_coordinates)
 	
 	if tile && !tile.building:
 		tile.building = building
@@ -186,10 +186,10 @@ func _try_place_building(building, x, y) -> bool:
 	
 
 
-func _try_place_unit(unit, x, y) -> bool:
+func _try_place_unit(unit, dest_coordinates) -> bool:
 	var result = false
-	var source_tile = _get_tile(unit.coordinates.x, unit.coordinates.y)
-	var destination_tile = get_node(_tile_name(x, y))
+	var source_tile = _get_tile(unit.coordinates)
+	var destination_tile = get_node(_tile_name(dest_coordinates))
 	
 	if destination_tile && !destination_tile.occupant:
 		destination_tile.occupant = unit
@@ -205,8 +205,8 @@ func _try_place_unit(unit, x, y) -> bool:
 
 
 func _get_path(from, to) -> PoolVector2Array:
-	var source_tile = get_node(_tile_name(from.x, from.y))
-	var destination_tile = get_node(_tile_name(to.x, to.y))
+	var source_tile = get_node(_tile_name(from))
+	var destination_tile = get_node(_tile_name(to))
 	
 	var result = astar.get_point_path(source_tile.id, destination_tile.id)
 	result.remove(0) #Path includes source_tile
@@ -215,13 +215,13 @@ func _get_path(from, to) -> PoolVector2Array:
 
 
 func _traverse_to_path(unit, x, y) -> void:
-	_get_tile(unit.coordinates.x, unit.coordinates.y).hide_yellow_filter()
+	_get_tile(unit.coordinates).hide_yellow_filter()
 	var point_path = _get_path(unit.coordinates, Vector2(x, y))
 	
 	for point in point_path:
-		_try_place_unit(unit, point.x, point.y)
+		_try_place_unit(unit, point)
 	
-	_get_tile(unit.coordinates.x, unit.coordinates.y).show_yellow_filter()
+	_get_tile(unit.coordinates).show_yellow_filter()
 	_clear_tile_path()
 
 
@@ -235,7 +235,7 @@ func _clear_tile_path() -> void:
 func _map_path(from: Vector2, to: Vector2) -> void:
 	var point_path = _get_path(from, to)
 	for point in point_path:
-		var tile = _get_tile(point.x, point.y)
+		var tile = _get_tile(point)
 		tile.show_white_filter()
 		tile_path_highlight.push_back(tile)
 
@@ -253,7 +253,7 @@ func _end_turn() -> void:
 func _select_unit_at_tile(coordinates: Vector2) -> void:
 	_deselect_unit()
 	
-	var tile = _get_tile(coordinates.x, coordinates.y)
+	var tile = _get_tile(coordinates)
 	selected_unit = tile.occupant
 	tile.show_yellow_filter()
 	emit_signal("unit_selected", tile.occupant)
@@ -263,7 +263,7 @@ func _deselect_unit() -> void:
 	if !selected_unit:
 		return
 		
-	var selected_unit_tile = _get_tile(selected_unit.coordinates.x, selected_unit.coordinates.y)
+	var selected_unit_tile = _get_tile(selected_unit.coordinates)
 	
 	selected_unit_tile.hide_yellow_filter()
 	selected_unit.hide_health_bar()
@@ -285,7 +285,7 @@ func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: 
 			print("Cannot locate unit type " + str(unit_type) + " to spawn")
 			return
 	
-	var success = _try_place_unit(unit, coordinates.x, coordinates.y)
+	var success = _try_place_unit(unit, coordinates)
 	
 	if !success:
 		print("Failed to place unit at " + str(coordinates))
@@ -297,7 +297,7 @@ func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: 
 	
 
 func _despawn_unit(unit: Unit) -> void:
-	var occupying_tile = _get_tile(unit.coordinates.x, unit.coordinates.y)
+	var occupying_tile = _get_tile(unit.coordinates)
 	occupying_tile.occupant = null
 	unit.queue_free()
 
@@ -333,7 +333,7 @@ func _resolve_attack(attacker: Unit, defender: Unit, battle_result: int):
 		_despawn_unit(attacker)
 		
 	if battle_result == BATTLE_RESULT.DEFENDER_DIED:
-		var defender_tile = _get_tile(defender.coordinates.x, defender.coordinates.y)
+		var defender_tile = _get_tile(defender.coordinates)
 		_despawn_unit(defender)
 		if attacker.attack_range == 0:
 			_traverse_to_path(attacker, defender_tile.coordinates.x, defender_tile.coordinates.y)
