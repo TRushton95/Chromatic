@@ -15,7 +15,8 @@ var settlement_scene = preload("res://Actors/Buildings/Settlement/Settlement.tsc
 const TILE_DIAMETER = 64
 
 #Enums
-enum UNIT_TYPE { SETTLER, WARRIOR, }
+enum UNIT_TYPE { SETTLER, WARRIOR }
+enum BATTLE_RESULT { NONE_DIED, ATTACKER_DIED, DEFENDER_DIED, BOTH_DIED }
 
 #Fields
 var rows = 8
@@ -32,7 +33,7 @@ signal unit_deselected
 
 
 #Event Handlers
-func _on_tile_clicked(coordinates : Vector2):
+func _on_tile_clicked(coordinates : Vector2) -> void:
 	var tile = _get_tile(coordinates.x, coordinates.y)
 	
 	if !tile:
@@ -50,7 +51,7 @@ func _on_tile_clicked(coordinates : Vector2):
 		emit_signal("unit_selected", tile.occupant)
 
 
-func _on_tile_hovered(coordinates: Vector2):
+func _on_tile_hovered(coordinates: Vector2) -> void:
 	var hovered_tile = _get_tile(coordinates.x, coordinates.y)
 	if hovered_tile && hovered_tile.occupant != null:
 		hovered_tile.occupant.show_health_bar()
@@ -61,20 +62,30 @@ func _on_tile_hovered(coordinates: Vector2):
 			_map_path(selected_unit.coordinates, coordinates)
 
 
-func _on_tile_unhovered(coordinates: Vector2):
+func _on_tile_unhovered(coordinates: Vector2) -> void:
 	var hovered_tile = _get_tile(coordinates.x, coordinates.y)
 	if hovered_tile && hovered_tile.occupant  && hovered_tile.occupant != selected_unit:
 		hovered_tile.occupant.hide_health_bar()
 
 
-func _on_tile_right_clicked(coordinates: Vector2):
+func _on_tile_right_clicked(coordinates: Vector2) -> void:
 	if selected_unit:
 		_map_path(selected_unit.coordinates, coordinates)
 
 
-func _on_tile_right_mouse_released(coordinates: Vector2):
-	if selected_unit:
+func _on_tile_right_mouse_released(coordinates: Vector2) -> void:
+	if !selected_unit:
+		return
+	
+	var target_tile = _get_tile(coordinates.x, coordinates.y)
+	
+	if !target_tile.occupant:
 		_traverse_to_path(selected_unit, coordinates.x, coordinates.y)
+	else:
+		if selected_unit.team != target_tile.occupant.team:
+			var battle_result = _attack(selected_unit, target_tile.occupant)
+			_resolve_attack(selected_unit, target_tile.occupant, battle_result)
+			
 
 
 func _on_AbilityButton_pressed() -> void:
@@ -94,8 +105,8 @@ func _on_AbilityButton_pressed() -> void:
 #Methods
 func _ready() -> void:
 	_generate_test_map()
-	_spawn_unit(UNIT_TYPE.SETTLER, "Settler", Vector2(0,0))
-	_spawn_unit(UNIT_TYPE.WARRIOR, "Warrior", Vector2(5,5))
+	_spawn_unit(UNIT_TYPE.SETTLER, "Settler", Vector2(0,0), 1)
+	_spawn_unit(UNIT_TYPE.WARRIOR, "Warrior", Vector2(5,5), 2)
 
 
 func _process(_delta: float) -> void:
@@ -228,7 +239,7 @@ func _map_path(from: Vector2, to: Vector2) -> void:
 		tile.show_white_filter()
 		tile_path_highlight.push_back(tile)
 		
-func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2) -> void:
+func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: int) -> void:
 	var unit
 	
 	match unit_type:
@@ -246,7 +257,49 @@ func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2) -> voi
 	if !success:
 		print("Failed to place unit at " + str(coordinates))
 		return
-		
+	
+	unit.team = team
 	unit.set_name(unit_name)
 	add_child(unit)
 	
+
+func _despawn_unit(unit: Unit) -> void:
+	var occupying_tile = _get_tile(unit.coordinates.x, unit.coordinates.y)
+	occupying_tile.occupant = null
+	unit.queue_free()
+
+
+#Returns an enum flag indicating who died in the battle
+func _attack(attacker: Unit, defender: Unit) -> int:
+	defender.current_health -= attacker.attack_damage
+	attacker.current_health -= defender.attack_damage
+	
+	var attacker_died = attacker.current_health == 0
+	var defender_died = defender.current_health == 0
+	
+	var result = BATTLE_RESULT.NONE_DIED
+	
+	if attacker_died && defender_died:
+		result = BATTLE_RESULT.BOTH_DIED
+	elif attacker_died:
+		result = BATTLE_RESULT.ATTACKER_DIED
+	elif defender_died:
+		result = BATTLE_RESULT.DEFENDER_DIED
+	
+	return result
+
+
+#Resolves the units based on the battle result enum from the _attack method
+func _resolve_attack(attacker: Unit, defender: Unit, battle_result: int):
+	if battle_result == BATTLE_RESULT.ATTACKER_DIED:
+		_despawn_unit(attacker)
+		
+	if battle_result == BATTLE_RESULT.DEFENDER_DIED:
+		var defender_tile = _get_tile(defender.coordinates.x, defender.coordinates.y)
+		_despawn_unit(defender)
+		_traverse_to_path(attacker, defender_tile.coordinates.x, defender_tile.coordinates.y)
+	
+	if battle_result == BATTLE_RESULT.BOTH_DIED:
+		_despawn_unit(attacker)
+		_despawn_unit(defender)
+		

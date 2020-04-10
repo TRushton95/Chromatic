@@ -3,9 +3,10 @@ class_name Unit
 
 #Fields
 export var max_health = 100
+export var attack_damage = 0
 var current_health setget current_health_set
-var coordinates = Vector2(-1, -1)
 var team = -1
+var coordinates = Vector2(-1, -1)
 
 
 #Methods
