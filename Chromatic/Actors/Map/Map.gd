@@ -37,6 +37,7 @@ var previous_hovered_tile : Tile
 var game_turn = 1
 var player_turn = 1
 var number_of_players = 2
+var buildings : Array
 
 #Signals
 signal unit_selected
@@ -255,7 +256,10 @@ func _end_turn() -> void:
 	if player_turn > number_of_players:
 		player_turn = 1
 		game_turn += 1
-	
+		
+		for building in buildings:
+			building.build_time_remaining -= 1
+		
 	_deselect_unit()
 	emit_signal("new_player_turn", player_turn)
 
@@ -351,6 +355,14 @@ func _spawn_building(building_type: int, building_name: String, coordinates: Vec
 	building.team = team
 	building.set_name(building_name)
 	add_child(building)
+	buildings.push_front(building)
+
+
+func _despawn_building(building: Building):
+	var occupying_tile = _get_tile(building.coordinates)
+	occupying_tile.building = null
+	buildings.erase(building)
+	building.queue_free()
 
 
 #Returns an enum flag indicating who died in the battle
