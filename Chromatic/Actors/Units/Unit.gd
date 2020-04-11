@@ -3,7 +3,8 @@ class_name Unit
 
 #Fields
 export var max_health = 100
-export var attack_damage = 0
+export var melee_attack_damage = 0
+export var ranged_attack_damage = 0
 export var attack_range = 0
 export var can_attack = false
 var current_health setget current_health_set

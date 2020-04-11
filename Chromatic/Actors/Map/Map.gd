@@ -17,7 +17,7 @@ const TILE_DIAMETER = 64
 
 #Enums
 enum UNIT_TYPE { SETTLER, WARRIOR, ARCHER }
-enum BATTLE_RESULT { NONE_DIED, ATTACKER_DIED, DEFENDER_DIED, BOTH_DIED }
+enum BATTLE_RESULT { CANCELLED, NONE_DIED, ATTACKER_DIED, DEFENDER_DIED, BOTH_DIED }
 
 #Fields
 var rows = 8
@@ -304,9 +304,17 @@ func _despawn_unit(unit: Unit) -> void:
 
 #Returns an enum flag indicating who died in the battle
 func _attack(attacker: Unit, defender: Unit) -> int:
-	_deal_damage(attacker, defender)
-	if attacker.attack_range == 0:
-		_deal_damage(defender, attacker)
+	var distance = _get_path(attacker.coordinates, defender.coordinates).size()
+	var is_ranged_attack = attacker.attack_range > 0
+	
+	if is_ranged_attack && attacker.attack_range >= distance:
+		_deal_ranged_damage(attacker, defender)
+		if defender.attack_range >= distance:
+			_deal_ranged_damage(defender, attacker)
+			
+	elif !is_ranged_attack && distance == 1:
+		_deal_melee_damage(attacker, defender)
+		_deal_melee_damage(defender, attacker)
 
 	var attacker_died = attacker.current_health == 0
 	var defender_died = defender.current_health == 0
@@ -323,8 +331,12 @@ func _attack(attacker: Unit, defender: Unit) -> int:
 	return result
 
 
-func _deal_damage(from: Unit, to: Unit):
-	to.current_health -= from.attack_damage
+func _deal_melee_damage(from: Unit, to: Unit):
+	to.current_health -= from.melee_attack_damage
+
+
+func _deal_ranged_damage(from: Unit, to: Unit):
+	to.current_health -= from.ranged_attack_damage
 
 
 #Resolves the units based on the battle result enum from the _attack method
