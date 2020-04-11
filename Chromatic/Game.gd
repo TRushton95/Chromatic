@@ -1,8 +1,5 @@
 extends Node
 
-#Constants
-const ABILITY_PROP_NAME = "ability"
-
 #Fields
 onready var unit_portrait = get_node("UI/UnitPortrait")
 onready var ability_button = get_node("UI/AbilityButton")
@@ -17,8 +14,8 @@ func _on_Map_unit_selected(unit) -> void:
 	unit_portrait.set_unit(unit)
 	unit_portrait.visible = true
 	
-	if ABILITY_PROP_NAME in unit:
-		ability_button.set_icon(unit.ability.get_texture())
+	if "ability" in unit && unit.ability != null:
+		ability_button.set_ability(unit.ability)
 		ability_button.visible = true
 	else:
 		ability_button.visible = false

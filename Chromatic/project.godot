@@ -9,15 +9,15 @@
 config_version=4
 
 _global_script_classes=[ {
+"base": "Node",
+"class": "Ability",
+"language": "GDScript",
+"path": "res://Entities/Ability.gd"
+}, {
 "base": "Unit",
 "class": "Archer",
 "language": "GDScript",
 "path": "res://Actors/Units/Archer/Archer.gd"
-}, {
-"base": "Node",
-"class": "BuildSettlementAbility",
-"language": "GDScript",
-"path": "res://Entities/Abilities/BuildSettlementAbility.gd"
 }, {
 "base": "Node2D",
 "class": "Building",
@@ -29,12 +29,12 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://Actors/Map/Map.gd"
 }, {
-"base": "Node2D",
+"base": "Building",
 "class": "Outpost",
 "language": "GDScript",
 "path": "res://Actors/Buildings/Outpost/Outpost.gd"
 }, {
-"base": "Node2D",
+"base": "Building",
 "class": "Settlement",
 "language": "GDScript",
 "path": "res://Actors/Buildings/Settlement/Settlement.gd"
@@ -65,8 +65,8 @@ _global_script_classes=[ {
 "path": "res://Actors/Units/Worker/Worker.gd"
 } ]
 _global_script_class_icons={
+"Ability": "",
 "Archer": "",
-"BuildSettlementAbility": "",
 "Building": "",
 "Map": "",
 "Outpost": "",

@@ -10,6 +10,7 @@ export var can_attack = false
 var current_health setget current_health_set
 var team = -1 setget team_set
 var coordinates = Vector2(-1, -1)
+var ability
 
 var team_colors = {
 	1: Color(0, 1, 0 ),

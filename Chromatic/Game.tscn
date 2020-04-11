@@ -58,5 +58,6 @@ __meta__ = {
 [connection signal="new_player_turn" from="Map" to="UI/DebugPlayerLabel" method="_on_Map_new_player_turn"]
 [connection signal="unit_deselected" from="Map" to="." method="_on_Map_unit_deselected"]
 [connection signal="unit_selected" from="Map" to="." method="_on_Map_unit_selected"]
-[connection signal="pressed" from="UI/AbilityButton" to="Map" method="_on_AbilityButton_pressed"]
+[connection signal="ability_selected" from="UI/AbilityButton" to="Map" method="_on_AbilityButton_ability_selected"]
+[connection signal="pressed" from="UI/AbilityButton" to="UI/AbilityButton" method="_on_AbilityButton_pressed"]
 [connection signal="pressed" from="UI/EndTurnButton" to="Map" method="_on_EndTurnButton_pressed"]

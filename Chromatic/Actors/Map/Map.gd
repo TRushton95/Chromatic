@@ -12,13 +12,19 @@ var archer_scene = preload("res://Actors/Units/Archer/Archer.tscn")
 
 #Building Scenes
 var settlement_scene = preload("res://Actors/Buildings/Settlement/Settlement.tscn")
+var outpost_scene = preload("res://Actors/Buildings/Outpost/Outpost.tscn")
+
+#Data Structures
+const Ability = preload("res://Entities/Ability.gd")
 
 #Constants
 const TILE_DIAMETER = 64
 
 #Enums
 enum UNIT_TYPE { SETTLER, WORKER, WARRIOR, ARCHER }
+enum BUILDING_TYPE { SETTLEMENT, OUTPOST }
 enum BATTLE_RESULT { CANCELLED, NONE_DIED, ATTACKER_DIED, DEFENDER_DIED, BOTH_DIED }
+enum ABILITY_TYPES { CONSTRUCT_BUILDING }
 
 #Fields
 var rows = 8
@@ -96,18 +102,12 @@ func _on_EndTurnButton_pressed() -> void:
 	_end_turn()
 
 
-func _on_AbilityButton_pressed() -> void:
-	var tile = _get_tile(selected_unit.coordinates)
-	
-	if tile.building:
-		print("Cannot build on tile " + str(tile.coordinates) + ". A building already exists there!")
-		return
-	
-	var settlement = settlement_scene.instance()
-	tile.building = settlement
-	settlement.coordinates = selected_unit.coordinates
-	settlement.position = selected_unit.position
-	add_child(settlement)
+func _on_AbilityButton_ability_selected(ability_type: int, data: Dictionary) -> void:
+	match ability_type:
+		ABILITY_TYPES.CONSTRUCT_BUILDING:
+			var building_type = data.building_type
+			var building_name = data.building_name
+			_spawn_building(building_type, building_name, selected_unit.coordinates, selected_unit.team)
 
 
 #Methods
@@ -178,14 +178,22 @@ func _get_tile(coordinates: Vector2) -> Node:
 
 func _try_place_building(building, dest_coordinates: Vector2) -> bool:
 	var result = false
-	var tile = _get_tile(dest_coordinates)
 	
-	if tile && !tile.building:
-		tile.building = building
+	var source_tile = _get_tile(building.coordinates)
+	if source_tile:
+		print("Building already placed and cannot be moved!")
+		return false
+	
+	var destination_tile = _get_tile(dest_coordinates)
+	
+	if destination_tile && !destination_tile.building:
+		destination_tile.building = building
+		building.coordinates = destination_tile.coordinates
+		building.position = destination_tile.position
+		
 		result = true
 	
 	return result
-	
 
 
 func _try_place_unit(unit, dest_coordinates) -> bool:
@@ -278,9 +286,22 @@ func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: 
 	match unit_type:
 		UNIT_TYPE.SETTLER:
 			unit = settler_scene.instance()
-			unit.connect("build_settlement", self, "_on_build_settlement")
+			var construct_settlement_icon = load("res://Assets/Buildings/Settlement.png")
+			var data = {
+				"building_type": BUILDING_TYPE.SETTLEMENT,
+				"building_name": "Settlement"
+			}
+			unit.ability = Ability.new(ABILITY_TYPES.CONSTRUCT_BUILDING, data, construct_settlement_icon)
+			
 		UNIT_TYPE.WORKER:
 			unit = worker_scene.instance()
+			var construct_outpost_icon = load("res://Assets/Buildings/Outpost.png")
+			var data = {
+				"building_type": BUILDING_TYPE.OUTPOST,
+				"building_name": "Outpost"
+			}
+			unit.ability = Ability.new(ABILITY_TYPES.CONSTRUCT_BUILDING, data, construct_outpost_icon)
+			
 		UNIT_TYPE.WARRIOR:
 			unit = warrior_scene.instance()
 		UNIT_TYPE.ARCHER:
@@ -298,12 +319,38 @@ func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: 
 	unit.team = team
 	unit.set_name(unit_name)
 	add_child(unit)
-	
 
 func _despawn_unit(unit: Unit) -> void:
 	var occupying_tile = _get_tile(unit.coordinates)
 	occupying_tile.occupant = null
 	unit.queue_free()
+
+func _spawn_building(building_type: int, building_name: String, coordinates: Vector2, team: int) -> void:
+	var dest_tile = _get_tile(coordinates)
+	if dest_tile.building:
+		print("Cannot build on tile " + str(dest_tile.coordinates) + ". A building already exists there!")
+		return
+	
+	var building
+	
+	match building_type:
+		BUILDING_TYPE.SETTLEMENT:
+			building = settlement_scene.instance()
+		BUILDING_TYPE.OUTPOST:
+			building = outpost_scene.instance()
+		_:
+			print("Cannot locate building type " + str(building_type) + " to spawn")
+			return
+			
+	var success = _try_place_building(building, coordinates)
+	
+	if !success:
+		print("Failed to place building at " + str(coordinates))
+		return
+	
+	building.team = team
+	building.set_name(building_name)
+	add_child(building)
 
 
 #Returns an enum flag indicating who died in the battle
