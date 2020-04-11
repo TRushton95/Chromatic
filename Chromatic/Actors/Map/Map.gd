@@ -256,9 +256,7 @@ func _end_turn() -> void:
 	if player_turn > number_of_players:
 		player_turn = 1
 		game_turn += 1
-		
-		for building in buildings:
-			building.build_time_remaining -= 1
+		resolve_turn()
 		
 	_deselect_unit()
 	emit_signal("new_player_turn", player_turn)
@@ -363,6 +361,16 @@ func _despawn_building(building: Building):
 	occupying_tile.building = null
 	buildings.erase(building)
 	building.queue_free()
+
+
+func resolve_turn():
+	for building in buildings:
+		if building.under_construction:
+			building.build_time_remaining -= 1
+			
+			if building.build_time_remaining <= 0:
+				building.under_construction = false
+		
 
 
 #Returns an enum flag indicating who died in the battle
