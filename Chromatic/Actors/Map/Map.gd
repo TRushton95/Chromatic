@@ -6,6 +6,7 @@ var tile_scene = preload("res://Actors/Tiles/Tile.tscn")
 
 #Unit Scenes
 var settler_scene = preload("res://Actors/Units/Settler/Settler.tscn")
+var worker_scene = preload("res://Actors/Units/Worker/Worker.tscn")
 var warrior_scene = preload("res://Actors/Units/Warrior/Warrior.tscn")
 var archer_scene = preload("res://Actors/Units/Archer/Archer.tscn")
 
@@ -16,7 +17,7 @@ var settlement_scene = preload("res://Actors/Buildings/Settlement/Settlement.tsc
 const TILE_DIAMETER = 64
 
 #Enums
-enum UNIT_TYPE { SETTLER, WARRIOR, ARCHER }
+enum UNIT_TYPE { SETTLER, WORKER, WARRIOR, ARCHER }
 enum BATTLE_RESULT { CANCELLED, NONE_DIED, ATTACKER_DIED, DEFENDER_DIED, BOTH_DIED }
 
 #Fields
@@ -115,6 +116,7 @@ func _ready() -> void:
 	_spawn_unit(UNIT_TYPE.SETTLER, "Settler", Vector2(0,0), 1)
 	_spawn_unit(UNIT_TYPE.ARCHER, "Archer", Vector2(7, 7), 1)
 	_spawn_unit(UNIT_TYPE.WARRIOR, "Warrior", Vector2(5,5), 2)
+	_spawn_unit(UNIT_TYPE.WORKER, "Worker", Vector2(3, 1), 2)
 
 
 func _process(_delta: float) -> void:
@@ -277,6 +279,8 @@ func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: 
 		UNIT_TYPE.SETTLER:
 			unit = settler_scene.instance()
 			unit.connect("build_settlement", self, "_on_build_settlement")
+		UNIT_TYPE.WORKER:
+			unit = worker_scene.instance()
 		UNIT_TYPE.WARRIOR:
 			unit = warrior_scene.instance()
 		UNIT_TYPE.ARCHER:

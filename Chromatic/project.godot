@@ -48,6 +48,11 @@ _global_script_classes=[ {
 "class": "Warrior",
 "language": "GDScript",
 "path": "res://Actors/Units/Warrior/Warrior.gd"
+}, {
+"base": "Unit",
+"class": "Worker",
+"language": "GDScript",
+"path": "res://Actors/Units/Worker/Worker.gd"
 } ]
 _global_script_class_icons={
 "Archer": "",
@@ -57,7 +62,8 @@ _global_script_class_icons={
 "Settler": "",
 "Tile": "",
 "Unit": "",
-"Warrior": ""
+"Warrior": "",
+"Worker": ""
 }
 
 [application]
