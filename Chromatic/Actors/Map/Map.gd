@@ -24,7 +24,7 @@ const TILE_DIAMETER = 64
 enum UNIT_TYPE { SETTLER, WORKER, WARRIOR, ARCHER }
 enum BUILDING_TYPE { SETTLEMENT, OUTPOST }
 enum BATTLE_RESULT { CANCELLED, NONE_DIED, ATTACKER_DIED, DEFENDER_DIED, BOTH_DIED }
-enum ABILITY_TYPES { CONSTRUCT_BUILDING }
+enum ABILITY_TYPES { CONSTRUCT_BUILDING, RESUME_CONSTRUCTION }
 enum Z_INDEX { BUILDING, UNIT }
 
 #Fields
@@ -104,7 +104,7 @@ func _on_EndTurnButton_pressed() -> void:
 	_end_turn()
 
 
-func _on_AbilityButton_ability_selected(ability_type: int, data: Dictionary) -> void:
+func _on_AbilityBar_ability_selected(ability_type: int, data: Dictionary) -> void:
 	match ability_type:
 		ABILITY_TYPES.CONSTRUCT_BUILDING:
 			var building_type = data.building_type
@@ -295,24 +295,31 @@ func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: 
 	match unit_type:
 		UNIT_TYPE.SETTLER:
 			unit = settler_scene.instance()
+			
 			var construct_settlement_icon = load("res://Assets/Buildings/Settlement.png")
 			var data = {
 				"building_type": BUILDING_TYPE.SETTLEMENT,
 				"building_name": "Settlement"
 			}
-			unit.ability = Ability.new(ABILITY_TYPES.CONSTRUCT_BUILDING, data, construct_settlement_icon)
+			unit.abilities.push_front(Ability.new(ABILITY_TYPES.CONSTRUCT_BUILDING, data, construct_settlement_icon))
 			
 		UNIT_TYPE.WORKER:
 			unit = worker_scene.instance()
+			
 			var construct_outpost_icon = load("res://Assets/Buildings/Outpost.png")
-			var data = {
+			var construct_outpost_data = {
 				"building_type": BUILDING_TYPE.OUTPOST,
 				"building_name": "Outpost"
 			}
-			unit.ability = Ability.new(ABILITY_TYPES.CONSTRUCT_BUILDING, data, construct_outpost_icon)
+			unit.abilities.push_back(Ability.new(ABILITY_TYPES.CONSTRUCT_BUILDING, construct_outpost_data, construct_outpost_icon))
+			
+			var resume_construction_icon = load("res://Assets/AbilityIcons/ResumeConstruction.png")
+			var resume_construction_data = {}
+			unit.abilities.push_back(Ability.new(ABILITY_TYPES.RESUME_CONSTRUCTION, resume_construction_data, resume_construction_icon))
 			
 		UNIT_TYPE.WARRIOR:
 			unit = warrior_scene.instance()
+			
 		UNIT_TYPE.ARCHER:
 			unit = archer_scene.instance()
 		_:
