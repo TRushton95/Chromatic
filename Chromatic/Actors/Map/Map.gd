@@ -25,6 +25,7 @@ enum UNIT_TYPE { SETTLER, WORKER, WARRIOR, ARCHER }
 enum BUILDING_TYPE { SETTLEMENT, OUTPOST }
 enum BATTLE_RESULT { CANCELLED, NONE_DIED, ATTACKER_DIED, DEFENDER_DIED, BOTH_DIED }
 enum ABILITY_TYPES { CONSTRUCT_BUILDING }
+enum Z_INDEX { BUILDING, UNIT }
 
 #Fields
 var rows = 8
@@ -325,6 +326,7 @@ func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: 
 		return
 	
 	unit.team = team
+	unit.z_index = Z_INDEX.UNIT
 	unit.set_name(unit_name)
 	add_child(unit)
 
@@ -356,6 +358,7 @@ func _spawn_building(building_type: int, building_name: String, coordinates: Vec
 		print("Failed to place building at " + str(coordinates))
 		return
 	
+	building.z_index = Z_INDEX.BUILDING
 	building.team = team
 	building.set_name(building_name)
 	add_child(building)
