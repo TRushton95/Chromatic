@@ -4,7 +4,7 @@ class_name Tile
 #Fields
 var coordinates : Vector2
 var occupant : Unit
-var building : Settlement
+var building : Building
 var id: int
 
 #Signals
@@ -38,6 +38,14 @@ func _on_Hitbox_input_event(_viewport: Node, event: InputEvent, _shape_idx: int)
 
 
 #Methods
+func has_building_under_construction() -> bool:
+	return building && building.under_construction
+
+
+func has_constructing_worker() -> bool:
+	return occupant && occupant is Worker && occupant.is_constructing
+
+
 func show_red_filter():
 	get_node("RedFilter").visible = true
 

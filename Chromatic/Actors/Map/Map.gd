@@ -365,11 +365,15 @@ func _despawn_building(building: Building):
 
 func resolve_turn():
 	for building in buildings:
-		if building.under_construction:
-			building.build_time_remaining -= 1
+		if !building.under_construction:
+			continue
 			
-			if building.build_time_remaining <= 0:
-				building.under_construction = false
+		var tile = _get_tile(building.coordinates)
+		if !building.construction_requires_worker || tile.has_constructing_worker():
+			building.build_time_remaining -= 1
+		
+		if building.build_time_remaining <= 0:
+			building.under_construction = false
 		
 
 
