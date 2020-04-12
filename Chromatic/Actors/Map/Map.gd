@@ -174,7 +174,13 @@ func _tile_name(coordinates: Vector2) -> String:
 
 
 func _get_tile(coordinates: Vector2) -> Node:
-	return get_node(_tile_name(coordinates))
+	var result = null
+	
+	var tile_name = _tile_name(coordinates)
+	if has_node(tile_name):
+		result = get_node(tile_name)
+	
+	return result
 
 
 func _try_place_building(building, dest_coordinates: Vector2) -> bool:
@@ -374,7 +380,6 @@ func resolve_turn():
 		
 		if building.build_time_remaining <= 0:
 			building.under_construction = false
-		
 
 
 #Returns an enum flag indicating who died in the battle
