@@ -9,6 +9,7 @@
 [node name="Game" type="Node"]
 
 [node name="Camera2D" type="Camera2D" parent="."]
+offset = Vector2( -100, -100 )
 anchor_mode = 0
 current = true
 script = ExtResource( 5 )
