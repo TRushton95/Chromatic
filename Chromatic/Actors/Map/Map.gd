@@ -24,6 +24,10 @@ const Ability = preload("res://Entities/Ability.gd")
 #Constants
 const TILE_DIAMETER = 64
 const STARTING_FOOD = 5
+const PLAYER_COLORS = {
+	1: Color(0, 1, 0),
+	2: Color(1, 0, 0)
+}
 
 #Enums
 enum UNIT_TYPE { SETTLER, WORKER, WARRIOR, ARCHER }
@@ -130,7 +134,7 @@ func _ready() -> void:
 	#TODO - food test code
 	for i in range(0, number_of_players):
 		var team = i + 1
-		players[team] = Player.new(team, STARTING_FOOD)
+		players[team] = Player.new(team, PLAYER_COLORS[team], STARTING_FOOD)
 	
 	_generate_test_map()
 	_spawn_unit(UNIT_TYPE.SETTLER, "Settler", Vector2(0,0), 1)
