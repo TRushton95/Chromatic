@@ -23,6 +23,7 @@ const Ability = preload("res://Entities/Ability.gd")
 
 #Constants
 const TILE_DIAMETER = 64
+const STARTING_FOOD = 5
 
 #Enums
 enum UNIT_TYPE { SETTLER, WORKER, WARRIOR, ARCHER }
@@ -45,7 +46,7 @@ var player_turn = 1
 var number_of_players = 2
 var buildings : Array
 var resource_nodes : Array
-var food = {}
+var players = {}
 
 #Signals
 signal unit_selected
@@ -127,8 +128,9 @@ func _on_AbilityBar_ability_selected(ability_type: int, data: Dictionary) -> voi
 #Methods
 func _ready() -> void:
 	#TODO - food test code
-	for player in range(0, number_of_players):
-		food[player + 1] = 5
+	for i in range(0, number_of_players):
+		var team = i + 1
+		players[team] = Player.new(team, STARTING_FOOD)
 	
 	_generate_test_map()
 	_spawn_unit(UNIT_TYPE.SETTLER, "Settler", Vector2(0,0), 1)
@@ -137,6 +139,8 @@ func _ready() -> void:
 	_spawn_unit(UNIT_TYPE.WORKER, "Worker", Vector2(3, 1), 2)
 	
 	_spawn_resource_node(RESOURCE_TYPE.FOOD, "Food", Vector2(4, 6))
+	
+	emit_signal("new_player_turn", players[1])
 
 
 func _process(_delta: float) -> void:
@@ -305,7 +309,7 @@ func _end_turn() -> void:
 		resolve_turn()
 		
 	_deselect_unit()
-	emit_signal("new_player_turn", player_turn)
+	emit_signal("new_player_turn", players[player_turn])
 
 
 func _set_worker_construction(worker: Worker, construct: bool):
@@ -508,14 +512,14 @@ func resolve_turn():
 		var tile = _get_tile(resource_node.coordinates)
 		
 		if tile.is_harvesting():
-			food[tile.building.team] += tile.pop_resources()
+			players[tile.building.team].food += tile.pop_resources()
 			
 			if resource_node.remaining_charges <= 0:
 				print("Resource node mined out")
 				_despawn_resource_node(resource_node)
 	
-	for player in range(0, number_of_players):
-		print("player " + str(player + 1) + ": " + str(food[player + 1]))
+	for i in range(0, number_of_players):
+		print("player " + str(players[i + 1]) + ": " + str(players[i + 1].food))
 
 
 #Returns an enum flag indicating who died in the battle
