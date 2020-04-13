@@ -46,6 +46,28 @@ func has_constructing_worker() -> bool:
 	return occupant && occupant is Worker && occupant.is_constructing
 
 
+func is_harvesting() -> bool:
+	if !building || building.under_construction:
+		return false
+	
+	if resource_node is Food and building is HuntingCamp:
+		return true
+	
+	return false 
+
+
+func pop_resources() -> int:
+	if !resource_node:
+		print("No resource node on this tile")
+	
+	if resource_node.remaining_charges <= 0:
+		print("Resource node has no remaining charges")
+	
+	resource_node.remaining_charges -= 1
+	
+	return resource_node.quantity
+
+
 func show_red_filter():
 	get_node("RedFilter").visible = true
 

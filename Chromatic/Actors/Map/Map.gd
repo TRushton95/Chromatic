@@ -45,6 +45,7 @@ var player_turn = 1
 var number_of_players = 2
 var buildings : Array
 var resource_nodes : Array
+var food = {}
 
 #Signals
 signal unit_selected
@@ -125,6 +126,10 @@ func _on_AbilityBar_ability_selected(ability_type: int, data: Dictionary) -> voi
 
 #Methods
 func _ready() -> void:
+	#TODO - food test code
+	for player in range(0, number_of_players):
+		food[player + 1] = 5
+	
 	_generate_test_map()
 	_spawn_unit(UNIT_TYPE.SETTLER, "Settler", Vector2(0,0), 1)
 	_spawn_unit(UNIT_TYPE.ARCHER, "Archer", Vector2(7, 7), 1)
@@ -370,6 +375,13 @@ func _spawn_resource_node(resource_type: int, resource_name: String, coordinates
 	return resource_node
 
 
+func _despawn_resource_node(resource_node: ResourceNode):
+	var occupying_tile = _get_tile(resource_node.coordinates)
+	occupying_tile.resource_node = null
+	resource_nodes.erase(resource_node)
+	resource_node.queue_free()
+
+
 func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: int) -> Unit:
 	var unit
 	
@@ -491,6 +503,19 @@ func resolve_turn():
 			
 			if building_tile.has_constructing_worker():
 				_set_worker_construction(building_tile.occupant, false)
+				
+	for resource_node in resource_nodes:
+		var tile = _get_tile(resource_node.coordinates)
+		
+		if tile.is_harvesting():
+			food[tile.building.team] += tile.pop_resources()
+			
+			if resource_node.remaining_charges <= 0:
+				print("Resource node mined out")
+				_despawn_resource_node(resource_node)
+	
+	for player in range(0, number_of_players):
+		print("player " + str(player + 1) + ": " + str(food[player + 1]))
 
 
 #Returns an enum flag indicating who died in the battle
