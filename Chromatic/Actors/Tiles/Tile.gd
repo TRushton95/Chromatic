@@ -5,6 +5,7 @@ class_name Tile
 var coordinates : Vector2
 var occupant : Unit
 var building : Building
+var resource_node : ResourceNode
 var id: int
 
 #Signals

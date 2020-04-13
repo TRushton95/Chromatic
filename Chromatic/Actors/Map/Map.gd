@@ -14,6 +14,9 @@ var archer_scene = preload("res://Actors/Units/Archer/Archer.tscn")
 var settlement_scene = preload("res://Actors/Buildings/Settlement/Settlement.tscn")
 var outpost_scene = preload("res://Actors/Buildings/Outpost/Outpost.tscn")
 
+#Resource Nodes
+var food_scene = preload("res://Actors/ResourceNodes/Food/Food.tscn")
+
 #Data Structures
 const Ability = preload("res://Entities/Ability.gd")
 
@@ -23,9 +26,10 @@ const TILE_DIAMETER = 64
 #Enums
 enum UNIT_TYPE { SETTLER, WORKER, WARRIOR, ARCHER }
 enum BUILDING_TYPE { SETTLEMENT, OUTPOST }
+enum RESOURCE_TYPE { FOOD }
 enum BATTLE_RESULT { CANCELLED, NONE_DIED, ATTACKER_DIED, DEFENDER_DIED, BOTH_DIED }
 enum ABILITY_TYPES { CONSTRUCT_BUILDING, RESUME_CONSTRUCTION }
-enum Z_INDEX { BUILDING, UNIT }
+enum Z_INDEX { RESOURCE_NODE, BUILDING, UNIT }
 
 #Fields
 var rows = 8
@@ -39,6 +43,7 @@ var game_turn = 1
 var player_turn = 1
 var number_of_players = 2
 var buildings : Array
+var resource_nodes : Array
 
 #Signals
 signal unit_selected
@@ -124,6 +129,8 @@ func _ready() -> void:
 	_spawn_unit(UNIT_TYPE.ARCHER, "Archer", Vector2(7, 7), 1)
 	_spawn_unit(UNIT_TYPE.WARRIOR, "Warrior", Vector2(5,5), 2)
 	_spawn_unit(UNIT_TYPE.WORKER, "Worker", Vector2(3, 1), 2)
+	
+	_spawn_resource_node(RESOURCE_TYPE.FOOD, "Food", Vector2(4, 6))
 
 
 func _process(_delta: float) -> void:
@@ -229,6 +236,25 @@ func _try_place_unit(unit, dest_coordinates) -> bool:
 	return result
 
 
+func _try_place_resource_node(resource_node : ResourceNode, dest_coordinates: Vector2) -> bool:
+	var result = false
+	
+	var source_tile = _get_tile(resource_node.coordinates)
+	if source_tile:
+		print("Resource node already placed and cannot be moved!")
+		return false
+	
+	var destination_tile = _get_tile(dest_coordinates)
+	
+	if destination_tile && !destination_tile.resource_node:
+		destination_tile.resource_node = resource_node
+		resource_node.coordinates = destination_tile.coordinates
+		resource_node.position = destination_tile.position
+		
+		result = true
+	
+	return result
+
 func _get_path(from, to) -> PoolVector2Array:
 	var source_tile = get_node(_tile_name(from))
 	var destination_tile = get_node(_tile_name(to))
@@ -320,6 +346,27 @@ func _deselect_unit() -> void:
 	selected_unit_tile.hide_yellow_filter()
 #	selected_unit.hide_health_bar()
 	emit_signal("unit_deselected")
+
+
+func _spawn_resource_node(resource_type: int, resource_name: String, coordinates: Vector2) -> ResourceNode:
+	var resource_node
+	
+	match resource_type:
+		RESOURCE_TYPE.FOOD:
+			resource_node = food_scene.instance()
+	
+	var success = _try_place_resource_node(resource_node, coordinates)
+	
+	if !success:
+		print("Failed to place resource node at " + str(coordinates))
+		return null
+	
+	resource_node.z_index = Z_INDEX.RESOURCE_NODE
+	resource_node.set_name(resource_name)
+	resource_nodes.push_front(resource_node)
+	add_child(resource_node)
+	
+	return resource_node
 
 
 func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: int) -> Unit:
