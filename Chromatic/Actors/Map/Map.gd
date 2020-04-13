@@ -17,6 +17,7 @@ var hunting_camp_scene = preload("res://Actors/Buildings/HuntingCamp/HuntingCamp
 
 #Resource Nodes
 var food_scene = preload("res://Actors/ResourceNodes/Food/Food.tscn")
+var gold_scene = preload("res://Actors/ResourceNodes/Gold/Gold.tscn")
 
 #Data Structures
 const Ability = preload("res://Entities/Ability.gd")
@@ -24,6 +25,7 @@ const Ability = preload("res://Entities/Ability.gd")
 #Constants
 const TILE_DIAMETER = 64
 const STARTING_FOOD = 5
+const STARTING_GOLD = 0
 const PLAYER_COLORS = {
 	1: Color(0, 1, 0),
 	2: Color(1, 0, 0)
@@ -32,7 +34,7 @@ const PLAYER_COLORS = {
 #Enums
 enum UNIT_TYPE { SETTLER, WORKER, WARRIOR, ARCHER }
 enum BUILDING_TYPE { SETTLEMENT, OUTPOST, HUNTING_CAMP }
-enum RESOURCE_TYPE { FOOD }
+enum RESOURCE_TYPE { FOOD, GOLD }
 enum BATTLE_RESULT { CANCELLED, NONE_DIED, ATTACKER_DIED, DEFENDER_DIED, BOTH_DIED }
 enum ABILITY_TYPES { CONSTRUCT_BUILDING, RESUME_CONSTRUCTION }
 enum Z_INDEX { RESOURCE_NODE, BUILDING, UNIT }
@@ -134,7 +136,7 @@ func _ready() -> void:
 	#TODO - food test code
 	for i in range(0, number_of_players):
 		var team = i + 1
-		players[team] = Player.new(team, PLAYER_COLORS[team], STARTING_FOOD)
+		players[team] = Player.new(team, PLAYER_COLORS[team], STARTING_FOOD, STARTING_GOLD)
 	
 	_generate_test_map()
 	_spawn_unit(UNIT_TYPE.SETTLER, "Settler", Vector2(0,0), 1)
@@ -142,7 +144,8 @@ func _ready() -> void:
 	_spawn_unit(UNIT_TYPE.WARRIOR, "Warrior", Vector2(5,5), 2)
 	_spawn_unit(UNIT_TYPE.WORKER, "Worker", Vector2(3, 1), 2)
 	
-	_spawn_resource_node(RESOURCE_TYPE.FOOD, "Food", Vector2(4, 6))
+	_spawn_resource_node(RESOURCE_TYPE.FOOD, "Food", Vector2(6, 1))
+	_spawn_resource_node(RESOURCE_TYPE.GOLD, "Gold", Vector2(8, 3))
 	
 	emit_signal("new_player_turn", players[1])
 
@@ -368,6 +371,11 @@ func _spawn_resource_node(resource_type: int, resource_name: String, coordinates
 	match resource_type:
 		RESOURCE_TYPE.FOOD:
 			resource_node = food_scene.instance()
+		RESOURCE_TYPE.GOLD:
+			resource_node = gold_scene.instance()
+		_:
+			print("Cannot locate resource type " + str(resource_type) + " to spawn")
+			return null
 	
 	var success = _try_place_resource_node(resource_node, coordinates)
 	
