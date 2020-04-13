@@ -446,6 +446,10 @@ func _spawn_building(building_type: int, building_name: String, coordinates: Vec
 		BUILDING_TYPE.OUTPOST:
 			building = outpost_scene.instance()
 		BUILDING_TYPE.HUNTING_CAMP:
+			if dest_tile.resource_node == null || dest_tile.resource_node.type != RESOURCE_TYPE.FOOD:
+				print("Cannot build a hunting camp there")
+				return null
+				
 			building = hunting_camp_scene.instance()
 		_:
 			print("Cannot locate building type " + str(building_type) + " to spawn")
