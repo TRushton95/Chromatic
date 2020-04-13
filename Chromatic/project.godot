@@ -34,6 +34,11 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://Actors/ResourceNodes/Food/Food.gd"
 }, {
+"base": "Building",
+"class": "HuntingCamp",
+"language": "GDScript",
+"path": "res://Actors/Buildings/HuntingCamp/HuntingCamp.gd"
+}, {
 "base": "Node",
 "class": "Map",
 "language": "GDScript",
@@ -85,6 +90,7 @@ _global_script_class_icons={
 "Archer": "",
 "Building": "",
 "Food": "",
+"HuntingCamp": "",
 "Map": "",
 "Outpost": "",
 "ResourceNode": "",

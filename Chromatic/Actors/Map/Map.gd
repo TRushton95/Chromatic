@@ -13,6 +13,7 @@ var archer_scene = preload("res://Actors/Units/Archer/Archer.tscn")
 #Building Scenes
 var settlement_scene = preload("res://Actors/Buildings/Settlement/Settlement.tscn")
 var outpost_scene = preload("res://Actors/Buildings/Outpost/Outpost.tscn")
+var hunting_camp_scene = preload("res://Actors/Buildings/HuntingCamp/HuntingCamp.tscn")
 
 #Resource Nodes
 var food_scene = preload("res://Actors/ResourceNodes/Food/Food.tscn")
@@ -25,7 +26,7 @@ const TILE_DIAMETER = 64
 
 #Enums
 enum UNIT_TYPE { SETTLER, WORKER, WARRIOR, ARCHER }
-enum BUILDING_TYPE { SETTLEMENT, OUTPOST }
+enum BUILDING_TYPE { SETTLEMENT, OUTPOST, HUNTING_CAMP }
 enum RESOURCE_TYPE { FOOD }
 enum BATTLE_RESULT { CANCELLED, NONE_DIED, ATTACKER_DIED, DEFENDER_DIED, BOTH_DIED }
 enum ABILITY_TYPES { CONSTRUCT_BUILDING, RESUME_CONSTRUCTION }
@@ -393,6 +394,13 @@ func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: 
 			}
 			unit.abilities.push_back(Ability.new(ABILITY_TYPES.CONSTRUCT_BUILDING, construct_outpost_data, construct_outpost_icon))
 			
+			var construct_hunting_camp_icon = load("res://Assets/Buildings/HuntingCamp.png")
+			var construct_hunting_camp_data = {
+				"building_type": BUILDING_TYPE.HUNTING_CAMP,
+				"building_name": "HuntingCamp"
+			}
+			unit.abilities.push_back(Ability.new(ABILITY_TYPES.CONSTRUCT_BUILDING, construct_hunting_camp_data, construct_hunting_camp_icon))
+			
 			var resume_construction_icon = load("res://Assets/AbilityIcons/ResumeConstruction.png")
 			var resume_construction_data = {}
 			unit.abilities.push_back(Ability.new(ABILITY_TYPES.RESUME_CONSTRUCTION, resume_construction_data, resume_construction_icon))
@@ -437,6 +445,8 @@ func _spawn_building(building_type: int, building_name: String, coordinates: Vec
 			building = settlement_scene.instance()
 		BUILDING_TYPE.OUTPOST:
 			building = outpost_scene.instance()
+		BUILDING_TYPE.HUNTING_CAMP:
+			building = hunting_camp_scene.instance()
 		_:
 			print("Cannot locate building type " + str(building_type) + " to spawn")
 			return null
