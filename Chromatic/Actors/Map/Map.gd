@@ -109,10 +109,13 @@ func _on_AbilityBar_ability_selected(ability_type: int, data: Dictionary) -> voi
 		ABILITY_TYPES.CONSTRUCT_BUILDING:
 			var building_type = data.building_type
 			var building_name = data.building_name
-			_spawn_building(building_type, building_name, selected_unit.coordinates, selected_unit.team)
+			var building = _spawn_building(building_type, building_name, selected_unit.coordinates, selected_unit.team)
+			if building && building.construction_requires_worker:
+				var tile = _get_tile(selected_unit.coordinates)
+				_set_worker_construction(tile.occupant, true)
 			
 		ABILITY_TYPES.RESUME_CONSTRUCTION:
-			_try_toggle_worker_construction(selected_unit)
+			_set_worker_construction(selected_unit, !selected_unit.is_constructing) #Toggle construction
 
 #Methods
 func _ready() -> void:
@@ -161,7 +164,7 @@ func _generate_test_map():
 	
 	for tile_key in tile_lookup:
 		_connect_to_adjacent_tiles(tile_lookup[tile_key])
-		
+
 
 func _connect_to_adjacent_tiles(tile):
 	for adj_tile_coords in tile.get_adjacent_tiles():
@@ -221,7 +224,7 @@ func _try_place_unit(unit, dest_coordinates) -> bool:
 		result = true
 	
 	if unit is Worker && unit.is_constructing:
-		unit.is_constructing = false
+		_set_worker_construction(unit, false)
 	
 	return result
 
@@ -273,7 +276,12 @@ func _end_turn() -> void:
 	emit_signal("new_player_turn", player_turn)
 
 
-func _try_toggle_worker_construction(worker: Worker) -> bool:
+func _set_worker_construction(worker: Worker, construct: bool):
+	if !construct:
+		worker.is_constructing = false
+		print("Worker is no longer constructing")
+		return
+	
 	var worker_tile = _get_tile(worker.coordinates)
 	
 	if !worker_tile:
@@ -287,9 +295,6 @@ func _try_toggle_worker_construction(worker: Worker) -> bool:
 		print("Cannot construct that building")
 		return false
 	
-	if worker.is_constructing:
-		worker.is_constructing = false
-		print("Worker is no longer constructing")
 	else:
 		worker.is_constructing = true
 		print("Worker now constructing")
@@ -317,7 +322,7 @@ func _deselect_unit() -> void:
 	emit_signal("unit_deselected")
 
 
-func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: int) -> void:
+func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: int) -> Unit:
 	var unit
 	
 	match unit_type:
@@ -352,29 +357,31 @@ func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: 
 			unit = archer_scene.instance()
 		_:
 			print("Cannot locate unit type " + str(unit_type) + " to spawn")
-			return
+			return null
 	
 	var success = _try_place_unit(unit, coordinates)
 	
 	if !success:
 		print("Failed to place unit at " + str(coordinates))
-		return
+		return null
 	
 	unit.team = team
 	unit.z_index = Z_INDEX.UNIT
 	unit.set_name(unit_name)
 	add_child(unit)
+	
+	return unit
 
 func _despawn_unit(unit: Unit) -> void:
 	var occupying_tile = _get_tile(unit.coordinates)
 	occupying_tile.occupant = null
 	unit.queue_free()
 
-func _spawn_building(building_type: int, building_name: String, coordinates: Vector2, team: int) -> void:
+func _spawn_building(building_type: int, building_name: String, coordinates: Vector2, team: int) -> Building:
 	var dest_tile = _get_tile(coordinates)
 	if dest_tile.building:
 		print("Cannot build on tile " + str(dest_tile.coordinates) + ". A building already exists there!")
-		return
+		return null
 	
 	var building
 	
@@ -385,19 +392,21 @@ func _spawn_building(building_type: int, building_name: String, coordinates: Vec
 			building = outpost_scene.instance()
 		_:
 			print("Cannot locate building type " + str(building_type) + " to spawn")
-			return
+			return null
 			
 	var success = _try_place_building(building, coordinates)
 	
 	if !success:
 		print("Failed to place building at " + str(coordinates))
-		return
+		return null
 	
 	building.z_index = Z_INDEX.BUILDING
 	building.team = team
 	building.set_name(building_name)
 	add_child(building)
 	buildings.push_front(building)
+	
+	return building
 
 
 func _despawn_building(building: Building):
@@ -420,7 +429,7 @@ func resolve_turn():
 			building.under_construction = false
 			
 			if building_tile.has_constructing_worker():
-				building_tile.occupant.is_constructing = false
+				_set_worker_construction(building_tile.occupant, false)
 
 
 #Returns an enum flag indicating who died in the battle
