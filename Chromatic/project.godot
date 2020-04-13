@@ -14,12 +14,17 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://Entities/Ability.gd"
 }, {
+"base": "Node2D",
+"class": "Actor",
+"language": "GDScript",
+"path": "res://Actors/Actor.gd"
+}, {
 "base": "Unit",
 "class": "Archer",
 "language": "GDScript",
 "path": "res://Actors/Units/Archer/Archer.gd"
 }, {
-"base": "Node2D",
+"base": "Actor",
 "class": "Building",
 "language": "GDScript",
 "path": "res://Actors/Buildings/Building.gd"
@@ -39,7 +44,7 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://Actors/Buildings/Outpost/Outpost.gd"
 }, {
-"base": "Node",
+"base": "Actor",
 "class": "ResourceNode",
 "language": "GDScript",
 "path": "res://Actors/ResourceNodes/ResourceNode.gd"
@@ -54,12 +59,12 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://Actors/Units/Settler/Settler.gd"
 }, {
-"base": "Node2D",
+"base": "Actor",
 "class": "Tile",
 "language": "GDScript",
 "path": "res://Actors/Tiles/Tile.gd"
 }, {
-"base": "Node2D",
+"base": "Actor",
 "class": "Unit",
 "language": "GDScript",
 "path": "res://Actors/Units/Unit.gd"
@@ -76,6 +81,7 @@ _global_script_classes=[ {
 } ]
 _global_script_class_icons={
 "Ability": "",
+"Actor": "",
 "Archer": "",
 "Building": "",
 "Food": "",

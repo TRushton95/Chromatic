@@ -1,4 +1,4 @@
-extends Node2D
+extends Actor
 class_name Unit
 
 #Fields
@@ -9,7 +9,6 @@ export var attack_range = 0
 export var can_attack = false
 var current_health setget current_health_set
 var team = -1 setget team_set
-var coordinates = Vector2(-1, -1)
 var abilities: Array
 
 var team_colors = {

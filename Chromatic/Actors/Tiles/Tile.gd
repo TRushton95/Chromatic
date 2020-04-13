@@ -1,8 +1,7 @@
-extends Node2D
+extends Actor
 class_name Tile
 
 #Fields
-var coordinates : Vector2
 var occupant : Unit
 var building : Building
 var resource_node : ResourceNode

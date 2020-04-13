@@ -1,4 +1,4 @@
-extends Node2D
+extends Actor
 class_name Building
 
 #Fields
@@ -8,7 +8,6 @@ export var construction_requires_worker = true
 export var build_time = 0
 var build_time_remaining: int setget build_time_remaining_set
 var under_construction: bool setget under_construction_set
-var coordinates = Vector2(-1, -1)
 var team = -1
 
 
