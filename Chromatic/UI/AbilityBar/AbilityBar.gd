@@ -25,15 +25,15 @@ func _on_AbilityButton1_pressed() -> void:
 	emit_signal("ability_selected", abilities[0].type, abilities[0].data)
 
 
-func _on_AbilityButton2_ability_selected() -> void:
+func _on_AbilityButton2_pressed() -> void:
 	emit_signal("ability_selected", abilities[1].type, abilities[1].data)
 
 
-func _on_AbilityButton3_ability_selected() -> void:
+func _on_AbilityButton3_pressed() -> void:
 	emit_signal("ability_selected", abilities[2].type, abilities[2].data)
 
 
-func _on_AbilityButton4_ability_selected() -> void:
+func _on_AbilityButton4_pressed() -> void:
 	emit_signal("ability_selected", abilities[3].type, abilities[3].data)
 
 

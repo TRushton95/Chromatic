@@ -33,4 +33,3 @@ margin_bottom = 25.0
 __meta__ = {
 "_edit_use_anchors_": false
 }
-[connection signal="pressed" from="." to="." method="_on_AbilityButton_pressed"]
