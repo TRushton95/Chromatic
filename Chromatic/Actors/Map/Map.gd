@@ -3,6 +3,7 @@ class_name Map
 
 #UI Nodes
 var building_health_bar_scene = preload("res://UI/HealthBars/BuildingHealthBar/BuildingHealthBar.tscn")
+var building_construction_timer_scene = preload("res://UI/ConstructionTimer/ConstructionTimer.tscn")
 
 #Tile Scenes
 var tile_scene = preload("res://Actors/Tiles/Tile.tscn")
@@ -481,6 +482,13 @@ func _spawn_building(building_type: int, building_name: String, coordinates: Vec
 	building_health_bar.margin_right = -23
 	building_health_bar.margin_bottom = 20
 	building.add_child(building_health_bar)
+	
+	var building_construction_timer = building_construction_timer_scene.instance()
+	building_construction_timer.margin_left = -16
+	building_construction_timer.margin_top = 28
+	building_construction_timer.margin_right = -16
+	building_construction_timer.margin_bottom = 28
+	building.add_child(building_construction_timer)
 	
 	building.z_index = Z_INDEX.BUILDING
 	building.team = team
