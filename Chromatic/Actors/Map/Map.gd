@@ -51,6 +51,8 @@ var players = {}
 
 #Signals
 signal unit_selected
+signal building_selected
+signal resource_node_selected
 signal entity_deselected
 signal new_player_turn
 signal new_game_turn
@@ -60,12 +62,12 @@ signal new_game_turn
 func _on_tile_clicked(coordinates : Vector2) -> void:
 	var tile = _get_tile(coordinates)
 	
-	if !tile || !tile.occupant || tile.occupant.team != player_turn:
+	if !tile:
 		return
 	
 	var has_unit = tile.occupant && tile.occupant.team == player_turn
 	var has_building = tile.building && tile.building.team == player_turn
-	var has_resource_node = tile.resource_node
+	var has_resource_node = tile.resource_node != null
 	
 	#Only has unit
 	if has_unit && !has_building && !has_resource_node:
@@ -371,11 +373,31 @@ func _select_unit_at_tile(coordinates: Vector2) -> void:
 	tile.show_yellow_filter()
 	emit_signal("unit_selected", selected_entity)
 
+
 func _select_building_at_tile(coordinates: Vector2) -> void:
-	pass
+	_deselect_entity()
+	
+	var tile = _get_tile(coordinates)
+	if !tile || !tile.building:
+		print("Cannot select building at " + str(coordinates))
+		return
+	
+	selected_entity = tile.building
+	tile.show_yellow_filter()
+	emit_signal("building_selected", selected_entity)
+	
 	
 func _select_resource_node_at_tile(coordinates: Vector2) -> void:
-	pass
+	_deselect_entity()
+	
+	var tile = _get_tile(coordinates)
+	if !tile || !tile.resource_node:
+		print("Cannot select resource node at " + str(coordinates))
+		return
+	
+	selected_entity = tile.resource_node
+	tile.show_yellow_filter()
+	emit_signal("resource_node_selected", selected_entity)
 
 
 func _deselect_entity() -> void:
@@ -385,6 +407,7 @@ func _deselect_entity() -> void:
 	var selected_entity_tile = _get_tile(selected_entity.coordinates)
 	selected_entity_tile.hide_yellow_filter()
 	emit_signal("entity_deselected")
+
 
 func _spawn_resource_node(resource_type: int, resource_name: String, coordinates: Vector2) -> ResourceNode:
 	var resource_node
