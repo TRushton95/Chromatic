@@ -3,8 +3,8 @@
 [ext_resource path="res://UI/EntitySelectionDropdown/EntitySelectionDropdown.gd" type="Script" id=1]
 
 [node name="EntitySelectionDropdown" type="PanelContainer"]
-margin_right = 14.0
-margin_bottom = 14.0
+margin_right = 78.0
+margin_bottom = 34.0
 script = ExtResource( 1 )
 __meta__ = {
 "_edit_use_anchors_": false
@@ -13,5 +13,25 @@ __meta__ = {
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 margin_left = 7.0
 margin_top = 7.0
-margin_right = 60.0
-margin_bottom = 27.0
+margin_right = 78.0
+margin_bottom = 75.0
+
+[node name="UnitOption" type="Button" parent="VBoxContainer"]
+margin_right = 71.0
+margin_bottom = 20.0
+text = "Unit"
+
+[node name="BuildingOption" type="Button" parent="VBoxContainer"]
+margin_top = 24.0
+margin_right = 71.0
+margin_bottom = 44.0
+text = "Building"
+
+[node name="ResourceNodeOption" type="Button" parent="VBoxContainer"]
+margin_top = 48.0
+margin_right = 71.0
+margin_bottom = 68.0
+text = "Resource"
+[connection signal="pressed" from="VBoxContainer/UnitOption" to="." method="_on_UnitOption_pressed"]
+[connection signal="pressed" from="VBoxContainer/BuildingOption" to="." method="_on_BuildingOption_pressed"]
+[connection signal="pressed" from="VBoxContainer/ResourceNodeOption" to="." method="_on_ResourceNodeOption_pressed"]

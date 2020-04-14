@@ -375,13 +375,7 @@ func _select_entity_at_tile(coordinates: Vector2) -> void:
 		emit_signal("resource_selected", tile.resource_node)
 		return
 	
-	var entity_options = [
-		tile.occupant,
-		tile.building,
-		tile.resource_node
-	]
-	
-	emit_signal("multiple_entities_selected", entity_options)
+	emit_signal("multiple_entities_selected", tile.occupant, tile.building, tile.resource_node)
 	
 
 func _deselect_entity() -> void:
