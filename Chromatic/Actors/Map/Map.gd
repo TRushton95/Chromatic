@@ -63,7 +63,22 @@ func _on_tile_clicked(coordinates : Vector2) -> void:
 	if !tile || !tile.occupant || tile.occupant.team != player_turn:
 		return
 	
-	_select_unit_at_tile(coordinates)
+	var has_unit = tile.occupant && tile.occupant.team == player_turn
+	var has_building = tile.building && tile.building.team == player_turn
+	var has_resource_node = tile.resource_node
+	
+	#Only has unit
+	if has_unit && !has_building && !has_resource_node:
+		_select_unit_at_tile(coordinates)
+		return
+	
+	#Only has building
+	if !has_unit && has_building && !has_resource_node:
+		return
+	
+	#Only has resource node
+	if !has_unit && !has_building && has_resource_node:
+		return
 
 
 func _on_tile_hovered(coordinates: Vector2) -> void:
