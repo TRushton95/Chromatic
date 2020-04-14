@@ -74,6 +74,7 @@ func _on_tile_clicked(coordinates : Vector2) -> void:
 	
 	#Only has building
 	if !has_unit && has_building && !has_resource_node:
+#		_select_building_at_tile(coordinates)
 		return
 	
 	#Only has resource node
@@ -375,6 +376,13 @@ func _deselect_unit() -> void:
 	selected_unit_tile.hide_yellow_filter()
 #	selected_unit.hide_health_bar()
 	emit_signal("unit_deselected")
+
+
+#func _select_building_at_tile(coordinates: Vector2) -> void:
+#	_deselect_building()
+#
+#	var tile = _get_tile(coordinates)
+#	selected_
 
 
 func _spawn_resource_node(resource_type: int, resource_name: String, coordinates: Vector2) -> ResourceNode:

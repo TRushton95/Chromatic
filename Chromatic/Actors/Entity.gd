@@ -1,5 +1,5 @@
-extends Node2D
-class_name Actor
+extends Node
+class_name Entity
 
 #Fields
 var coordinates = Vector2(-1, -1)

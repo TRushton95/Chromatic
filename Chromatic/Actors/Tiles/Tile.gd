@@ -1,4 +1,4 @@
-extends Actor
+extends Node2D
 class_name Tile
 
 #Fields
@@ -6,6 +6,7 @@ var occupant : Unit
 var building : Building
 var resource_node : ResourceNode
 var id: int
+var coordinates = Vector2(-1, -1)
 
 #Signals
 signal tile_hovered
