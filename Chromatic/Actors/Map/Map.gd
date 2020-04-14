@@ -37,7 +37,7 @@ enum Z_INDEX { RESOURCE_NODE, BUILDING, UNIT }
 #Fields
 var rows = 8
 var columns = 10
-var selected_unit : Unit
+var selected_entity : Entity
 var tile_lookup = {}
 var astar = AStar2D.new()
 var tile_path_highlight = []
@@ -51,7 +51,7 @@ var players = {}
 
 #Signals
 signal unit_selected
-signal unit_deselected
+signal entity_deselected
 signal new_player_turn
 signal new_game_turn
 
@@ -74,11 +74,12 @@ func _on_tile_clicked(coordinates : Vector2) -> void:
 	
 	#Only has building
 	if !has_unit && has_building && !has_resource_node:
-#		_select_building_at_tile(coordinates)
+		_select_building_at_tile(coordinates)
 		return
 	
 	#Only has resource node
 	if !has_unit && !has_building && has_resource_node:
+		_select_resource_node_at_tile(coordinates)
 		return
 
 
@@ -90,8 +91,8 @@ func _on_tile_hovered(coordinates: Vector2) -> void:
 		
 	if Input.is_mouse_button_pressed(BUTTON_RIGHT):
 		_clear_tile_path()
-		if selected_unit:
-			_map_path(selected_unit.coordinates, coordinates)
+		if selected_entity && selected_entity is Unit:
+			_map_path(selected_entity.coordinates, coordinates)
 
 
 func _on_tile_unhovered(coordinates: Vector2) -> void:
@@ -102,29 +103,29 @@ func _on_tile_unhovered(coordinates: Vector2) -> void:
 
 
 func _on_tile_right_clicked(coordinates: Vector2) -> void:
-	if selected_unit:
-		_map_path(selected_unit.coordinates, coordinates)
+	if selected_entity && selected_entity is Unit:
+		_map_path(selected_entity.coordinates, coordinates)
 
 
 func _on_tile_right_mouse_released(coordinates: Vector2) -> void:
-	if !selected_unit:
+	if !selected_entity || !selected_entity is Unit:
 		return
 	
 	var target_tile = _get_tile(coordinates)
 	
 	if !target_tile.occupant:
-		_traverse_to_path(selected_unit, coordinates.x, coordinates.y)
+		_traverse_to_path(selected_entity, coordinates.x, coordinates.y)
 		return
 	
-	if selected_unit.team == target_tile.occupant.team:
+	if selected_entity.team == target_tile.occupant.team:
 		return
 	
-	if !selected_unit.can_attack:
+	if !selected_entity.can_attack:
 		print("This unit cannot attack!")
 		return
 	
-	var battle_result = _attack(selected_unit, target_tile.occupant)
-	_resolve_attack(selected_unit, target_tile.occupant, battle_result)
+	var battle_result = _attack(selected_entity, target_tile.occupant)
+	_resolve_attack(selected_entity, target_tile.occupant, battle_result)
 
 
 func _on_EndTurnButton_pressed() -> void:
@@ -136,13 +137,13 @@ func _on_AbilityBar_ability_selected(ability_type: int, data: Dictionary) -> voi
 		Enums.ABILITY_TYPES.CONSTRUCT_BUILDING:
 			var building_type = data.building_type
 			var building_name = data.building_name
-			var building = _spawn_building(building_type, building_name, selected_unit.coordinates, selected_unit.team)
+			var building = _spawn_building(building_type, building_name, selected_entity.coordinates, selected_entity.team)
 			if building && building.construction_requires_worker:
-				var tile = _get_tile(selected_unit.coordinates)
+				var tile = _get_tile(selected_entity.coordinates)
 				_set_worker_construction(tile.occupant, true)
 			
 		Enums.ABILITY_TYPES.RESUME_CONSTRUCTION:
-			_set_worker_construction(selected_unit, !selected_unit.is_constructing) #Toggle construction
+			_set_worker_construction(selected_entity, !selected_entity.is_constructing) #Toggle construction
 
 #Methods
 func _ready() -> void:
@@ -168,7 +169,7 @@ func _process(_delta: float) -> void:
 		_clear_tile_path()
 		
 	if Input.is_action_just_pressed("cancel"):
-		_deselect_unit()
+		_deselect_entity()
 
 
 func _generate_test_map():
@@ -328,7 +329,7 @@ func _end_turn() -> void:
 		game_turn += 1
 		resolve_turn()
 		
-	_deselect_unit()
+	_deselect_entity()
 	emit_signal("new_player_turn", players[player_turn])
 
 
@@ -359,31 +360,31 @@ func _set_worker_construction(worker: Worker, construct: bool):
 
 
 func _select_unit_at_tile(coordinates: Vector2) -> void:
-	_deselect_unit()
+	_deselect_entity()
 	
 	var tile = _get_tile(coordinates)
-	selected_unit = tile.occupant
-	tile.show_yellow_filter()
-	emit_signal("unit_selected", tile.occupant)
-
-
-func _deselect_unit() -> void:
-	if !selected_unit:
+	if !tile || !tile.occupant:
+		print("Cannot select unit at " + str(coordinates))
 		return
-		
-	var selected_unit_tile = _get_tile(selected_unit.coordinates)
 	
-	selected_unit_tile.hide_yellow_filter()
-#	selected_unit.hide_health_bar()
-	emit_signal("unit_deselected")
+	selected_entity = tile.occupant
+	tile.show_yellow_filter()
+	emit_signal("unit_selected", selected_entity)
+
+func _select_building_at_tile(coordinates: Vector2) -> void:
+	pass
+	
+func _select_resource_node_at_tile(coordinates: Vector2) -> void:
+	pass
 
 
-#func _select_building_at_tile(coordinates: Vector2) -> void:
-#	_deselect_building()
-#
-#	var tile = _get_tile(coordinates)
-#	selected_
+func _deselect_entity() -> void:
+	if !selected_entity:
+		return
 
+	var selected_entity_tile = _get_tile(selected_entity.coordinates)
+	selected_entity_tile.hide_yellow_filter()
+	emit_signal("entity_deselected")
 
 func _spawn_resource_node(resource_type: int, resource_name: String, coordinates: Vector2) -> ResourceNode:
 	var resource_node

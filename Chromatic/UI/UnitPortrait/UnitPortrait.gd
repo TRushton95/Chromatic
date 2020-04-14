@@ -15,7 +15,7 @@ func _on_Map_unit_selected(unit: Unit) -> void:
 	visible = true
 
 
-func _on_Map_unit_deselected() -> void:
+func _on_Map_entity_deselected() -> void:
 	visible = false
 
 
