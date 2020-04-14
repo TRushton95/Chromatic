@@ -20,9 +20,6 @@ var mining_camp_scene = preload("res://Actors/Buildings/MiningCamp/MiningCamp.ts
 var food_scene = preload("res://Actors/ResourceNodes/Food/Food.tscn")
 var gold_scene = preload("res://Actors/ResourceNodes/Gold/Gold.tscn")
 
-#Data Structures
-const Ability = preload("res://Entities/Ability.gd")
-
 #Constants
 const TILE_DIAMETER = 64
 const STARTING_FOOD = 5
