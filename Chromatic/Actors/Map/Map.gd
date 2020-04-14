@@ -53,6 +53,7 @@ var players = {}
 signal unit_selected
 signal building_selected
 signal resource_node_selected
+signal multiple_entities_selected
 signal entity_deselected
 signal new_player_turn
 signal new_game_turn
@@ -60,29 +61,7 @@ signal new_game_turn
 
 #Event Handlers
 func _on_tile_clicked(coordinates : Vector2) -> void:
-	var tile = _get_tile(coordinates)
-	
-	if !tile:
-		return
-	
-	var has_unit = tile.occupant && tile.occupant.team == player_turn
-	var has_building = tile.building && tile.building.team == player_turn
-	var has_resource_node = tile.resource_node != null
-	
-	#Only has unit
-	if has_unit && !has_building && !has_resource_node:
-		_select_unit_at_tile(coordinates)
-		return
-	
-	#Only has building
-	if !has_unit && has_building && !has_resource_node:
-		_select_building_at_tile(coordinates)
-		return
-	
-	#Only has resource node
-	if !has_unit && !has_building && has_resource_node:
-		_select_resource_node_at_tile(coordinates)
-		return
+	_select_entity_at_tile(coordinates)
 
 
 func _on_tile_hovered(coordinates: Vector2) -> void:
@@ -360,45 +339,50 @@ func _set_worker_construction(worker: Worker, construct: bool):
 	
 	return true
 
-
-func _select_unit_at_tile(coordinates: Vector2) -> void:
-	_deselect_entity()
-	
+func _select_entity_at_tile(coordinates: Vector2) -> void:
 	var tile = _get_tile(coordinates)
-	if !tile || !tile.occupant:
-		print("Cannot select unit at " + str(coordinates))
+	
+	if !tile:
 		return
 	
-	selected_entity = tile.occupant
-	tile.show_yellow_filter()
-	emit_signal("unit_selected", selected_entity)
-
-
-func _select_building_at_tile(coordinates: Vector2) -> void:
-	_deselect_entity()
+	var has_unit = tile.occupant && tile.occupant.team == player_turn
+	var has_building = tile.building && tile.building.team == player_turn
+	var has_resource_node = tile.resource_node
 	
-	var tile = _get_tile(coordinates)
-	if !tile || !tile.building:
-		print("Cannot select building at " + str(coordinates))
+	#No entities on tile
+	if !has_unit && !has_building && !has_resource_node:
+		print("Nothing to select")
 		return
 	
-	selected_entity = tile.building
-	tile.show_yellow_filter()
-	emit_signal("building_selected", selected_entity)
-	
-	
-func _select_resource_node_at_tile(coordinates: Vector2) -> void:
-	_deselect_entity()
-	
-	var tile = _get_tile(coordinates)
-	if !tile || !tile.resource_node:
-		print("Cannot select resource node at " + str(coordinates))
+	#Only has unit
+	if has_unit && !has_building && !has_resource_node:
+		selected_entity = tile.occupant
+		tile.show_yellow_filter()
+		emit_signal("unit_selected", tile.occupant)
 		return
 	
-	selected_entity = tile.resource_node
-	tile.show_yellow_filter()
-	emit_signal("resource_node_selected", selected_entity)
-
+	#Only has building
+	if !has_unit && has_building && !has_resource_node:
+		selected_entity = tile.building
+		tile.show_yellow_filter()
+		emit_signal("building_selected", tile.building)
+		return
+	
+	#Only has resource node
+	if !has_unit && !has_building && has_resource_node:
+		selected_entity = tile.resource_node
+		tile.show_yellow_filter()
+		emit_signal("resource_selected", tile.resource_node)
+		return
+	
+	var entity_options = [
+		tile.occupant,
+		tile.building,
+		tile.resource_node
+	]
+	
+	emit_signal("multiple_entities_selected", entity_options)
+	
 
 func _deselect_entity() -> void:
 	if !selected_entity:
