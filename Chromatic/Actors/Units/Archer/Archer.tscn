@@ -2,7 +2,9 @@
 
 [ext_resource path="res://Assets/Units/Archer.png" type="Texture" id=1]
 [ext_resource path="res://Actors/Units/Archer/Archer.gd" type="Script" id=2]
-[ext_resource path="res://UI/HealthBar/HealthBar.tscn" type="PackedScene" id=3]
+[ext_resource path="res://UI/UnitHealthBar/UnitHealthBar.tscn" type="PackedScene" id=3]
+
+
 
 [node name="Archer" type="Node2D"]
 script = ExtResource( 2 )
