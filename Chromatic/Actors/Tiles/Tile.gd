@@ -52,6 +52,8 @@ func is_harvesting() -> bool:
 	
 	if resource_node is Food and building is HuntingCamp:
 		return true
+	if resource_node is Gold and building is MiningCamp:
+		return true
 	
 	return false 
 
