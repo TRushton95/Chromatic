@@ -3,7 +3,7 @@
 [ext_resource path="res://Assets/UI/HealthBars/Horizontal/H_HealthBarBorder.png" type="Texture" id=1]
 [ext_resource path="res://Assets/UI/HealthBars/Horizontal/H_WhiteHealthBar.png" type="Texture" id=2]
 [ext_resource path="res://Assets/UI/HealthBars/Horizontal/H_BlackHealthBar.png" type="Texture" id=3]
-[ext_resource path="res://UI/UnitHealthBar/UnitHealthBar.gd" type="Script" id=4]
+[ext_resource path="res://UI/HealthBars/HealthBar.gd" type="Script" id=4]
 
 [node name="UnitHealthBar" type="Control"]
 anchor_right = 1.0
