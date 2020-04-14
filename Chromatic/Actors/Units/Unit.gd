@@ -15,13 +15,13 @@ var abilities: Array
 #Methods
 func _ready() -> void:
 	current_health = max_health
+	_init_health_bar(max_health, current_health)
 	
 func _process(_delta: float) -> void:
 	if Input.is_key_pressed(KEY_LEFT):
 		current_health_set(current_health - 2)
 	elif Input.is_key_pressed(KEY_RIGHT):
 		current_health_set(current_health + 2)
-
 
 func current_health_set(health: int) -> void:
 	current_health = health
@@ -46,3 +46,8 @@ func show_health_bar() -> void:
 
 func hide_health_bar() -> void:
 	get_node("HealthBar").visible = false
+
+
+func _init_health_bar(max_value: int, current_value: int):
+	get_node("HealthBar").set_max_value(max_value)
+	get_node("HealthBar").set_value(current_value)

@@ -1,10 +1,9 @@
 extends Actor
 class_name Building
 
-#UI Scenes
+#Fields
 onready var construction_timer = get_node("ConstructionTimer")
 
-#Fields
 export var max_health = 1
 export var construction_requires_worker = true
 export var build_time = 0
@@ -31,9 +30,17 @@ func under_construction_set(value: bool) -> void:
 
 #Methods
 func _ready() -> void:
+	current_health = max_health
+	_init_health_bar(max_health, current_health)
+	
 	under_construction = true
 	build_time_remaining_set(build_time)
-
+	
+func _process(_delta: float) -> void:
+	if Input.is_key_pressed(KEY_LEFT):
+		current_health_set(current_health - 2)
+	elif Input.is_key_pressed(KEY_RIGHT):
+		current_health_set(current_health + 2)
 
 func show_construction_timer() -> void:
 	construction_timer.visible = true
@@ -58,3 +65,9 @@ func team_set(team_number: int) -> void:
 	team = team_number
 	var team_color = Lookups.TEAM_COLORS[team]
 	get_node("BuildingHealthBar").set_color(team_color)
+
+
+func _init_health_bar(max_value: int, current_value: int):
+	get_node("BuildingHealthBar").set_max_value(max_value)
+	get_node("BuildingHealthBar").set_value(current_value)
+
