@@ -1,8 +1,8 @@
 [gd_scene load_steps=5 format=2]
 
-[ext_resource path="res://Assets/UI/BlackHealthBar.png" type="Texture" id=1]
-[ext_resource path="res://Assets/UI/HealthBarBorder.png" type="Texture" id=2]
-[ext_resource path="res://Assets/UI/WhiteHealthBar.png" type="Texture" id=3]
+[ext_resource path="res://Assets/UI/HealthBars/Horizontal/H_HealthBarBorder.png" type="Texture" id=1]
+[ext_resource path="res://Assets/UI/HealthBars/Horizontal/H_WhiteHealthBar.png" type="Texture" id=2]
+[ext_resource path="res://Assets/UI/HealthBars/Horizontal/H_BlackHealthBar.png" type="Texture" id=3]
 [ext_resource path="res://UI/UnitHealthBar/UnitHealthBar.gd" type="Script" id=4]
 
 [node name="UnitHealthBar" type="Control"]
@@ -19,7 +19,7 @@ __meta__ = {
 [node name="TextureRect" type="TextureRect" parent="."]
 margin_right = 34.0
 margin_bottom = 6.0
-texture = ExtResource( 2 )
+texture = ExtResource( 1 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
@@ -30,8 +30,8 @@ margin_top = 1.0
 margin_right = 33.0
 margin_bottom = 5.0
 value = 100.0
-texture_under = ExtResource( 1 )
-texture_progress = ExtResource( 3 )
+texture_under = ExtResource( 3 )
+texture_progress = ExtResource( 2 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
