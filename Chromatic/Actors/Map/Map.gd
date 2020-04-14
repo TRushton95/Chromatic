@@ -1,7 +1,10 @@
 extends Node
 class_name Map
 
-#Scenes
+#UI Nodes
+var building_health_bar_scene = preload("res://UI/HealthBars/BuildingHealthBar/BuildingHealthBar.tscn")
+
+#Tile Scenes
 var tile_scene = preload("res://Actors/Tiles/Tile.tscn")
 
 #Unit Scenes
@@ -471,6 +474,13 @@ func _spawn_building(building_type: int, building_name: String, coordinates: Vec
 	if !success:
 		print("Failed to place building at " + str(coordinates))
 		return null
+	
+	var building_health_bar = building_health_bar_scene.instance()
+	building_health_bar.margin_left = -35
+	building_health_bar.margin_top = -20
+	building_health_bar.margin_right = -23
+	building_health_bar.margin_bottom = 20
+	building.add_child(building_health_bar)
 	
 	building.z_index = Z_INDEX.BUILDING
 	building.team = team
