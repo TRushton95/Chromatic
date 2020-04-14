@@ -120,6 +120,10 @@ config/name="Chromatic"
 run/main_scene="res://Game.tscn"
 config/icon="res://icon.png"
 
+[autoload]
+
+Enums="*res://Global/Enums.gd"
+
 [input]
 
 select={

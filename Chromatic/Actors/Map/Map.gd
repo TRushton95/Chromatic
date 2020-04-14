@@ -34,7 +34,6 @@ const PLAYER_COLORS = {
 #Enums
 enum UNIT_TYPE { SETTLER, WORKER, WARRIOR, ARCHER }
 enum BUILDING_TYPE { SETTLEMENT, OUTPOST, HUNTING_CAMP }
-enum RESOURCE_TYPE { FOOD, GOLD }
 enum BATTLE_RESULT { CANCELLED, NONE_DIED, ATTACKER_DIED, DEFENDER_DIED, BOTH_DIED }
 enum ABILITY_TYPES { CONSTRUCT_BUILDING, RESUME_CONSTRUCTION }
 enum Z_INDEX { RESOURCE_NODE, BUILDING, UNIT }
@@ -144,8 +143,8 @@ func _ready() -> void:
 	_spawn_unit(UNIT_TYPE.WARRIOR, "Warrior", Vector2(5,5), 2)
 	_spawn_unit(UNIT_TYPE.WORKER, "Worker", Vector2(3, 1), 2)
 	
-	_spawn_resource_node(RESOURCE_TYPE.FOOD, "Food", Vector2(6, 1))
-	_spawn_resource_node(RESOURCE_TYPE.GOLD, "Gold", Vector2(8, 3))
+	_spawn_resource_node(Enums.RESOURCE_TYPE.FOOD, "Food", Vector2(6, 1))
+	_spawn_resource_node(Enums.RESOURCE_TYPE.GOLD, "Gold", Vector2(8, 3))
 	
 	emit_signal("new_player_turn", players[1])
 
@@ -369,9 +368,9 @@ func _spawn_resource_node(resource_type: int, resource_name: String, coordinates
 	var resource_node
 	
 	match resource_type:
-		RESOURCE_TYPE.FOOD:
+		Enums.RESOURCE_TYPE.FOOD:
 			resource_node = food_scene.instance()
-		RESOURCE_TYPE.GOLD:
+		Enums.RESOURCE_TYPE.GOLD:
 			resource_node = gold_scene.instance()
 		_:
 			print("Cannot locate resource type " + str(resource_type) + " to spawn")
@@ -474,7 +473,7 @@ func _spawn_building(building_type: int, building_name: String, coordinates: Vec
 		BUILDING_TYPE.OUTPOST:
 			building = outpost_scene.instance()
 		BUILDING_TYPE.HUNTING_CAMP:
-			if dest_tile.resource_node == null || dest_tile.resource_node.type != RESOURCE_TYPE.FOOD:
+			if dest_tile.resource_node == null || dest_tile.resource_node.type != Enums.RESOURCE_TYPE.FOOD:
 				print("Cannot build a hunting camp there")
 				return null
 				
