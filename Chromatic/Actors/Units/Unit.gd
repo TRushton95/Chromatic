@@ -11,11 +11,6 @@ var current_health setget current_health_set
 var team = -1 setget team_set
 var abilities: Array
 
-var team_colors = {
-	1: Color(0, 1, 0 ),
-	2: Color(1, 0, 0 )
-}
-
 
 #Methods
 func _ready() -> void:
@@ -26,6 +21,7 @@ func _process(_delta: float) -> void:
 		current_health_set(current_health - 2)
 	elif Input.is_key_pressed(KEY_RIGHT):
 		current_health_set(current_health + 2)
+
 
 func current_health_set(health: int) -> void:
 	current_health = health
@@ -40,7 +36,7 @@ func current_health_set(health: int) -> void:
 
 func team_set(team_number: int) -> void:
 	team = team_number
-	var team_color = team_colors[team]
+	var team_color = Lookups.TEAM_COLORS[team]
 	get_node("HealthBar").set_color(team_color)
 
 

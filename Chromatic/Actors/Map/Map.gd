@@ -1,7 +1,7 @@
 extends Node
 class_name Map
 
-#UI Nodes
+#UI Scenes
 var building_health_bar_scene = preload("res://UI/HealthBars/BuildingHealthBar/BuildingHealthBar.tscn")
 var building_construction_timer_scene = preload("res://UI/ConstructionTimer/ConstructionTimer.tscn")
 
@@ -20,7 +20,7 @@ var outpost_scene = preload("res://Actors/Buildings/Outpost/Outpost.tscn")
 var hunting_camp_scene = preload("res://Actors/Buildings/HuntingCamp/HuntingCamp.tscn")
 var mining_camp_scene = preload("res://Actors/Buildings/MiningCamp/MiningCamp.tscn")
 
-#Resource Nodes
+#Resource Scenes
 var food_scene = preload("res://Actors/ResourceNodes/Food/Food.tscn")
 var gold_scene = preload("res://Actors/ResourceNodes/Gold/Gold.tscn")
 
@@ -28,10 +28,6 @@ var gold_scene = preload("res://Actors/ResourceNodes/Gold/Gold.tscn")
 const TILE_DIAMETER = 64
 const STARTING_FOOD = 5
 const STARTING_GOLD = 0
-const PLAYER_COLORS = {
-	1: Color(0, 1, 0),
-	2: Color(1, 0, 0)
-}
 
 #Enums
 enum UNIT_TYPE { SETTLER, WORKER, WARRIOR, ARCHER }
@@ -137,7 +133,7 @@ func _ready() -> void:
 	#TODO - food test code
 	for i in range(0, number_of_players):
 		var team = i + 1
-		players[team] = Player.new(team, PLAYER_COLORS[team], STARTING_FOOD, STARTING_GOLD)
+		players[team] = Player.new(team, Lookups.TEAM_COLORS[team], STARTING_FOOD, STARTING_GOLD)
 	
 	_generate_test_map()
 	_spawn_unit(UNIT_TYPE.SETTLER, "Settler", Vector2(0,0), 1)

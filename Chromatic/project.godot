@@ -134,7 +134,8 @@ config/icon="res://icon.png"
 
 [autoload]
 
-Enums="*res://Global/Enums.gd"
+Enums="*res://UI/Global/Enums.gd"
+Lookups="*res://UI/Global/Lookups.gd"
 
 [input]
 
