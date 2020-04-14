@@ -31,9 +31,7 @@ const PLAYER_COLORS = {
 
 #Enums
 enum UNIT_TYPE { SETTLER, WORKER, WARRIOR, ARCHER }
-enum BUILDING_TYPE { SETTLEMENT, OUTPOST, HUNTING_CAMP, MINING_CAMP }
 enum BATTLE_RESULT { CANCELLED, NONE_DIED, ATTACKER_DIED, DEFENDER_DIED, BOTH_DIED }
-enum ABILITY_TYPES { CONSTRUCT_BUILDING, RESUME_CONSTRUCTION }
 enum Z_INDEX { RESOURCE_NODE, BUILDING, UNIT }
 
 #Fields
@@ -69,7 +67,8 @@ func _on_tile_clicked(coordinates : Vector2) -> void:
 
 
 func _on_tile_hovered(coordinates: Vector2) -> void:
-	var hovered_tile = _get_tile(coordinates)
+	pass
+#	var hovered_tile = _get_tile(coordinates)
 #	if hovered_tile && hovered_tile.occupant != null:
 #		hovered_tile.occupant.show_health_bar()
 		
@@ -80,7 +79,8 @@ func _on_tile_hovered(coordinates: Vector2) -> void:
 
 
 func _on_tile_unhovered(coordinates: Vector2) -> void:
-	var hovered_tile = _get_tile(coordinates)
+	pass
+#	var hovered_tile = _get_tile(coordinates)
 #	if hovered_tile && hovered_tile.occupant  && hovered_tile.occupant != selected_unit:
 #		hovered_tile.occupant.hide_health_bar()
 
@@ -117,7 +117,7 @@ func _on_EndTurnButton_pressed() -> void:
 
 func _on_AbilityBar_ability_selected(ability_type: int, data: Dictionary) -> void:
 	match ability_type:
-		ABILITY_TYPES.CONSTRUCT_BUILDING:
+		Enums.ABILITY_TYPES.CONSTRUCT_BUILDING:
 			var building_type = data.building_type
 			var building_name = data.building_name
 			var building = _spawn_building(building_type, building_name, selected_unit.coordinates, selected_unit.team)
@@ -125,7 +125,7 @@ func _on_AbilityBar_ability_selected(ability_type: int, data: Dictionary) -> voi
 				var tile = _get_tile(selected_unit.coordinates)
 				_set_worker_construction(tile.occupant, true)
 			
-		ABILITY_TYPES.RESUME_CONSTRUCTION:
+		Enums.ABILITY_TYPES.RESUME_CONSTRUCTION:
 			_set_worker_construction(selected_unit, !selected_unit.is_constructing) #Toggle construction
 
 #Methods
@@ -401,41 +401,14 @@ func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: 
 	match unit_type:
 		UNIT_TYPE.SETTLER:
 			unit = settler_scene.instance()
-			
-			var construct_settlement_icon = load("res://Assets/Buildings/Settlement.png")
-			var data = {
-				"building_type": BUILDING_TYPE.SETTLEMENT,
-				"building_name": "Settlement"
-			}
-			unit.abilities.push_front(Ability.new(ABILITY_TYPES.CONSTRUCT_BUILDING, data, construct_settlement_icon))
+			unit.abilities.push_front(AbilityFactory.get_construct_settlement_ability())
 			
 		UNIT_TYPE.WORKER:
 			unit = worker_scene.instance()
-			
-			var construct_outpost_icon = load("res://Assets/Buildings/Outpost.png")
-			var construct_outpost_data = {
-				"building_type": BUILDING_TYPE.OUTPOST,
-				"building_name": "Outpost"
-			}
-			unit.abilities.push_back(Ability.new(ABILITY_TYPES.CONSTRUCT_BUILDING, construct_outpost_data, construct_outpost_icon))
-			
-			var construct_hunting_camp_icon = load("res://Assets/Buildings/HuntingCamp.png")
-			var construct_hunting_camp_data = {
-				"building_type": BUILDING_TYPE.HUNTING_CAMP,
-				"building_name": "HuntingCamp"
-			}
-			unit.abilities.push_back(Ability.new(ABILITY_TYPES.CONSTRUCT_BUILDING, construct_hunting_camp_data, construct_hunting_camp_icon))
-			
-			var construct_mining_camp_icon = load("res://Assets/Buildings/MiningCamp.png")
-			var construct_mining_camp_data = {
-				"building_type": BUILDING_TYPE.MINING_CAMP,
-				"building_name": "MiningCamp"
-			}
-			unit.abilities.push_back(Ability.new(ABILITY_TYPES.CONSTRUCT_BUILDING, construct_mining_camp_data, construct_mining_camp_icon))
-			
-			var resume_construction_icon = load("res://Assets/AbilityIcons/ResumeConstruction.png")
-			var resume_construction_data = {}
-			unit.abilities.push_back(Ability.new(ABILITY_TYPES.RESUME_CONSTRUCTION, resume_construction_data, resume_construction_icon))
+			unit.abilities.push_back(AbilityFactory.get_construct_outpost_ability())
+			unit.abilities.push_back(AbilityFactory.get_construct_hunting_camp_ability())
+			unit.abilities.push_back(AbilityFactory.get_construct_mining_camp_ability())
+			unit.abilities.push_back(AbilityFactory.get_resume_construction_ability())
 			
 		UNIT_TYPE.WARRIOR:
 			unit = warrior_scene.instance()
@@ -473,17 +446,17 @@ func _spawn_building(building_type: int, building_name: String, coordinates: Vec
 	var building
 	
 	match building_type:
-		BUILDING_TYPE.SETTLEMENT:
+		Enums.BUILDING_TYPE.SETTLEMENT:
 			building = settlement_scene.instance()
-		BUILDING_TYPE.OUTPOST:
+		Enums.BUILDING_TYPE.OUTPOST:
 			building = outpost_scene.instance()
-		BUILDING_TYPE.HUNTING_CAMP:
+		Enums.BUILDING_TYPE.HUNTING_CAMP:
 			if dest_tile.resource_node == null || dest_tile.resource_node.resource_type != Enums.RESOURCE_TYPE.FOOD:
 				print("Cannot build a hunting camp there")
 				return null
 				
 			building = hunting_camp_scene.instance()
-		BUILDING_TYPE.MINING_CAMP:
+		Enums.BUILDING_TYPE.MINING_CAMP:
 			if dest_tile.resource_node == null || dest_tile.resource_node.resource_type != Enums.RESOURCE_TYPE.GOLD:
 				print("Cannot build a mining camp there")
 				return null

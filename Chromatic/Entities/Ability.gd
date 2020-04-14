@@ -8,7 +8,7 @@ var icon: Texture
 
 
 #Constructors
-func _init(type: int, data: Dictionary, icon: Texture) -> void:
-	self.type = type
-	self.data = data
-	self.icon = icon
+func _init(_type: int, _data: Dictionary, _icon: Texture) -> void:
+	type = _type
+	data = _data
+	icon = _icon

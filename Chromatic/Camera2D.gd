@@ -7,7 +7,7 @@ const MIN_ZOOM = Vector2.ONE
 
 
 #Methods
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	var velocity = Vector2.ZERO
 	
 	if Input.is_action_pressed("camera_up"):

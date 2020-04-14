@@ -8,5 +8,5 @@ var resource_type: int
 
 
 #Constructors
-func _init(resource_type: int):
-	self.resource_type = resource_type
+func _init(_resource_type: int):
+	resource_type = _resource_type

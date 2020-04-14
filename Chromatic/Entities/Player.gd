@@ -7,8 +7,8 @@ var food : int
 var gold: int
 
 #Constructors
-func _init(team: int, color: Color, food: int, gold: int) -> void:
-	self.team = team
-	self.color = color
-	self.food = food
-	self.gold = gold
+func _init(_team: int, _color: Color, _food: int, _gold: int) -> void:
+	team = _team
+	color = _color
+	food = _food
+	gold = _gold
