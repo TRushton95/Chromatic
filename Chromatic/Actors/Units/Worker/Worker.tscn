@@ -4,12 +4,9 @@
 [ext_resource path="res://Actors/Units/Worker/Worker.gd" type="Script" id=2]
 [ext_resource path="res://UI/HealthBars/UnitHealthBar/HealthBar.tscn" type="PackedScene" id=3]
 
-
-
-
-
 [node name="Worker" type="Node2D"]
 script = ExtResource( 2 )
+max_health = 50
 
 [node name="HealthBar" parent="." instance=ExtResource( 3 )]
 margin_left = -16.0

@@ -2,7 +2,7 @@ extends Actor
 class_name Unit
 
 #Fields
-export var max_health = 100
+export var max_health = 1
 export var melee_attack_damage = 0
 export var ranged_attack_damage = 0
 export var attack_range = 0

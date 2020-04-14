@@ -4,12 +4,9 @@
 [ext_resource path="res://Actors/Units/Archer/Archer.gd" type="Script" id=2]
 [ext_resource path="res://UI/HealthBars/UnitHealthBar/HealthBar.tscn" type="PackedScene" id=3]
 
-
-
-
-
 [node name="Archer" type="Node2D"]
 script = ExtResource( 2 )
+max_health = 75
 melee_attack_damage = 20
 ranged_attack_damage = 40
 attack_range = 3

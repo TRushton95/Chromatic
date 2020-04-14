@@ -5,6 +5,7 @@
 
 [node name="Settlement" type="Node2D"]
 script = ExtResource( 2 )
+max_health = 500
 construction_requires_worker = false
 build_time = 3
 

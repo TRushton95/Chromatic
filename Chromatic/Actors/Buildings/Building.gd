@@ -5,7 +5,7 @@ class_name Building
 onready var construction_timer = get_node("ConstructionTimer")
 
 #Fields
-export var max_health = 100
+export var max_health = 1
 export var construction_requires_worker = true
 export var build_time = 0
 var build_time_remaining: int setget build_time_remaining_set
