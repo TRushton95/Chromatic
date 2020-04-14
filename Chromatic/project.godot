@@ -50,6 +50,11 @@ _global_script_classes=[ {
 "path": "res://Actors/Map/Map.gd"
 }, {
 "base": "Building",
+"class": "MiningCamp",
+"language": "GDScript",
+"path": "res://Actors/Buildings/MiningCamp/MiningCamp.gd"
+}, {
+"base": "Building",
 "class": "Outpost",
 "language": "GDScript",
 "path": "res://Actors/Buildings/Outpost/Outpost.gd"
@@ -103,6 +108,7 @@ _global_script_class_icons={
 "Gold": "",
 "HuntingCamp": "",
 "Map": "",
+"MiningCamp": "",
 "Outpost": "",
 "Player": "",
 "ResourceNode": "",
