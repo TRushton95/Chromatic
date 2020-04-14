@@ -473,7 +473,7 @@ func _spawn_building(building_type: int, building_name: String, coordinates: Vec
 		BUILDING_TYPE.OUTPOST:
 			building = outpost_scene.instance()
 		BUILDING_TYPE.HUNTING_CAMP:
-			if dest_tile.resource_node == null || dest_tile.resource_node.type != Enums.RESOURCE_TYPE.FOOD:
+			if dest_tile.resource_node == null || dest_tile.resource_node.resource_type != Enums.RESOURCE_TYPE.FOOD:
 				print("Cannot build a hunting camp there")
 				return null
 				
@@ -523,14 +523,17 @@ func resolve_turn():
 		var tile = _get_tile(resource_node.coordinates)
 		
 		if tile.is_harvesting():
-			players[tile.building.team].food += tile.pop_resources()
+			var harvested_resources = tile.pop_resources()
+			
+			match harvested_resources[0]:
+				Enums.RESOURCE_TYPE.FOOD:
+					players[tile.building.team].food += harvested_resources[1]
+				Enums.RESOURCE_TYPE.GOLD:
+					players[tile.building.team].gold += harvested_resources[1]
 			
 			if resource_node.remaining_charges <= 0:
 				print("Resource node mined out")
 				_despawn_resource_node(resource_node)
-	
-	for i in range(0, number_of_players):
-		print("player " + str(players[i + 1]) + ": " + str(players[i + 1].food))
 
 
 #Returns an enum flag indicating who died in the battle

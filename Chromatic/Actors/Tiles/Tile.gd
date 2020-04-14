@@ -56,7 +56,7 @@ func is_harvesting() -> bool:
 	return false 
 
 
-func pop_resources() -> int:
+func pop_resources() -> Array:
 	if !resource_node:
 		print("No resource node on this tile")
 	
@@ -65,7 +65,7 @@ func pop_resources() -> int:
 	
 	resource_node.remaining_charges -= 1
 	
-	return resource_node.quantity
+	return [resource_node.resource_type, resource_node.quantity]
 
 
 func show_red_filter():
