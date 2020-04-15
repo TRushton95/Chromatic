@@ -2,7 +2,7 @@ extends Node
 class_name AbilityFactory
 
 
-#Methods
+#Unit Abilities
 static func get_construct_settlement_ability() -> Ability:
 	var construct_settlement_icon = load("res://Assets/Buildings/Settlement.png")
 	var data = {
@@ -43,3 +43,15 @@ static func get_resume_construction_ability() -> Ability:
 	var resume_construction_icon = load("res://Assets/AbilityIcons/ResumeConstruction.png")
 	var resume_construction_data = {}
 	return Ability.new(Enums.ABILITY_TYPES.RESUME_CONSTRUCTION, resume_construction_data, resume_construction_icon)
+
+
+#Building Abilities
+static func get_build_settler_ability() -> Ability:
+	var build_settler_icon = load("res://Assets/Units/Settler.png")
+	var build_settler_data = {
+		"unit_type": Enums.UNIT_TYPE.SETTLER,
+		"unit_name": "Settler"
+	}
+	var production_time = 1
+	var food_cost = 1
+	return Ability.new(Enums.ABILITY_TYPES.BUILD_UNIT, build_settler_data, build_settler_icon, production_time, food_cost)

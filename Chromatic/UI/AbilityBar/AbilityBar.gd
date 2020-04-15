@@ -12,11 +12,11 @@ signal ability_selected
 
 #Event Handlers
 func _on_Map_entity_selected(entity: Entity) -> void:
-	if !entity:
-		print("Ability bar: no entity")
+	if !entity || entity is ResourceNode:
+		print("Failed to display ability bar")
 		return
 	
-	if entity is Unit && entity.abilities:
+	if entity.abilities:
 		visible = true
 		set_abilities(entity.abilities)
 	else:

@@ -30,7 +30,6 @@ const STARTING_FOOD = 5
 const STARTING_GOLD = 0
 
 #Enums
-enum UNIT_TYPE { SETTLER, WORKER, WARRIOR, ARCHER }
 enum BATTLE_RESULT { CANCELLED, NONE_DIED, ATTACKER_DIED, DEFENDER_DIED, BOTH_DIED }
 enum Z_INDEX { RESOURCE_NODE, BUILDING, UNIT }
 
@@ -127,7 +126,11 @@ func _on_AbilityBar_ability_selected(ability_type: int, data: Dictionary) -> voi
 			
 		Enums.ABILITY_TYPES.RESUME_CONSTRUCTION:
 			_set_worker_construction(selected_entity, !selected_entity.is_constructing) #Toggle construction
-
+		
+		Enums.ABILITY_TYPES.BUILD_UNIT:
+			var unit_type = data.unit_type
+			var unit_name = data.unit_name
+			var unit = _spawn_unit(unit_type, unit_name, selected_entity.coordinates, selected_entity.team)
 
 func _on_EntitySelectionDropdown_option_selected(index: int) -> void:
 	_select_entity(multiple_entity_selection_storage[index])
@@ -141,10 +144,10 @@ func _ready() -> void:
 		players[team] = Player.new(team, Lookups.TEAM_COLORS[team], STARTING_FOOD, STARTING_GOLD)
 	
 	_generate_test_map()
-	_spawn_unit(UNIT_TYPE.SETTLER, "Settler", Vector2(0,0), 1)
-	_spawn_unit(UNIT_TYPE.ARCHER, "Archer", Vector2(7, 7), 1)
-	_spawn_unit(UNIT_TYPE.WARRIOR, "Warrior", Vector2(5,5), 2)
-	_spawn_unit(UNIT_TYPE.WORKER, "Worker", Vector2(3, 1), 2)
+	_spawn_unit(Enums.UNIT_TYPE.SETTLER, "Settler", Vector2(0,0), 1)
+	_spawn_unit(Enums.UNIT_TYPE.ARCHER, "Archer", Vector2(7, 7), 1)
+	_spawn_unit(Enums.UNIT_TYPE.WARRIOR, "Warrior", Vector2(5,5), 2)
+	_spawn_unit(Enums.UNIT_TYPE.WORKER, "Worker", Vector2(3, 1), 2)
 	
 	_spawn_resource_node(Enums.RESOURCE_TYPE.FOOD, "Food", Vector2(6, 1))
 	_spawn_resource_node(Enums.RESOURCE_TYPE.GOLD, "Gold", Vector2(8, 3))
@@ -423,21 +426,21 @@ func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: 
 	var unit
 	
 	match unit_type:
-		UNIT_TYPE.SETTLER:
+		Enums.UNIT_TYPE.SETTLER:
 			unit = settler_scene.instance()
 			unit.abilities.push_front(AbilityFactory.get_construct_settlement_ability())
 			
-		UNIT_TYPE.WORKER:
+		Enums.UNIT_TYPE.WORKER:
 			unit = worker_scene.instance()
 			unit.abilities.push_back(AbilityFactory.get_construct_outpost_ability())
 			unit.abilities.push_back(AbilityFactory.get_construct_hunting_camp_ability())
 			unit.abilities.push_back(AbilityFactory.get_construct_mining_camp_ability())
 			unit.abilities.push_back(AbilityFactory.get_resume_construction_ability())
 			
-		UNIT_TYPE.WARRIOR:
+		Enums.UNIT_TYPE.WARRIOR:
 			unit = warrior_scene.instance()
 			
-		UNIT_TYPE.ARCHER:
+		Enums.UNIT_TYPE.ARCHER:
 			unit = archer_scene.instance()
 		_:
 			print("Cannot locate unit type " + str(unit_type) + " to spawn")
@@ -468,6 +471,7 @@ func _spawn_building(building_type: int, building_name: String, coordinates: Vec
 	match building_type:
 		Enums.BUILDING_TYPE.SETTLEMENT:
 			building = settlement_scene.instance()
+			building.abilities.push_front(AbilityFactory.get_build_settler_ability())
 		Enums.BUILDING_TYPE.OUTPOST:
 			building = outpost_scene.instance()
 		Enums.BUILDING_TYPE.HUNTING_CAMP:
