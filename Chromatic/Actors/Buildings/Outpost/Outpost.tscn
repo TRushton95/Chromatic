@@ -6,6 +6,9 @@
 [node name="Outpost" type="Node2D"]
 script = ExtResource( 2 )
 max_health = 250
+ranged_attack_damage = 10
+attack_range = 2
+can_attack = true
 build_time = 2
 
 [node name="Sprite" type="Sprite" parent="."]

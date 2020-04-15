@@ -91,21 +91,24 @@ func _on_tile_right_mouse_released(coordinates: Vector2) -> void:
 	if !selected_entity || !selected_entity is Unit:
 		return
 	
-	var target_tile = _get_tile(coordinates)
+	var tile = _get_tile(coordinates)
 	
-	if !target_tile.occupant:
+	#Hostile player entity
+	if tile.has_hostile_player_entity(player_turn):
+		if !selected_entity.can_attack:
+			print("This unit cannot attack!")
+			return
+		
+		var hostile_player_entity = tile.building if tile.has_hostile_building(player_turn) else tile.occupant
+		
+		var battle_result = _attack(selected_entity, hostile_player_entity)
+		_resolve_attack(selected_entity, hostile_player_entity, battle_result)
+		return
+	
+	#No units or hostile buildings
+	if !tile.occupant && !tile.has_hostile_building(player_turn):
 		_traverse_to_path(selected_entity, coordinates.x, coordinates.y)
 		return
-	
-	if selected_entity.team == target_tile.occupant.team:
-		return
-	
-	if !selected_entity.can_attack:
-		print("This unit cannot attack!")
-		return
-	
-	var battle_result = _attack(selected_entity, target_tile.occupant)
-	_resolve_attack(selected_entity, target_tile.occupant, battle_result)
 
 
 func _on_EndTurnButton_pressed() -> void:
@@ -416,13 +419,6 @@ func _spawn_resource_node(resource_type: int, resource_name: String, coordinates
 	return resource_node
 
 
-func _despawn_resource_node(resource_node: ResourceNode):
-	var occupying_tile = _get_tile(resource_node.coordinates)
-	occupying_tile.resource_node = null
-	resource_nodes.erase(resource_node)
-	resource_node.queue_free()
-
-
 func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: int) -> Unit:
 	var unit
 	
@@ -460,10 +456,6 @@ func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: 
 	
 	return unit
 
-func _despawn_unit(unit: Unit) -> void:
-	var occupying_tile = _get_tile(unit.coordinates)
-	occupying_tile.occupant = null
-	unit.queue_free()
 
 func _spawn_building(building_type: int, building_name: String, coordinates: Vector2, team: int) -> Building:
 	var dest_tile = _get_tile(coordinates)
@@ -505,6 +497,7 @@ func _spawn_building(building_type: int, building_name: String, coordinates: Vec
 	building_health_bar.margin_top = -20
 	building_health_bar.margin_right = -23
 	building_health_bar.margin_bottom = 20
+	building_health_bar.name = "HealthBar"
 	building.add_child(building_health_bar)
 	
 	var building_construction_timer = building_construction_timer_scene.instance()
@@ -521,13 +514,6 @@ func _spawn_building(building_type: int, building_name: String, coordinates: Vec
 	buildings.push_front(building)
 	
 	return building
-
-
-func _despawn_building(building: Building):
-	var occupying_tile = _get_tile(building.coordinates)
-	occupying_tile.building = null
-	buildings.erase(building)
-	building.queue_free()
 
 
 func resolve_turn():
@@ -559,11 +545,28 @@ func resolve_turn():
 			
 			if resource_node.remaining_charges <= 0:
 				print("Resource node mined out")
-				_despawn_resource_node(resource_node)
+				_despawn_entity(resource_node)
+
+
+func _despawn_entity(entity: Entity) -> void:
+	var occupying_tile = _get_tile(entity.coordinates)
+	
+	if entity is Unit:
+		occupying_tile.occupant = null
+	
+	if entity is Building:
+		occupying_tile.building = null	
+		buildings.erase(entity)
+	
+	if entity is ResourceNode:
+		occupying_tile.resource_node = null	
+		resource_nodes.erase(entity)
+	
+	entity.queue_free()
 
 
 #Returns an enum flag indicating who died in the battle
-func _attack(attacker: Unit, defender: Unit) -> int:
+func _attack(attacker: PlayerEntity, defender: PlayerEntity) -> int:
 	var distance = _get_path(attacker.coordinates, defender.coordinates).size()
 	var is_ranged_attack = attacker.attack_range > 0
 	
@@ -591,25 +594,25 @@ func _attack(attacker: Unit, defender: Unit) -> int:
 	return result
 
 
-func _deal_melee_damage(from: Unit, to: Unit):
+func _deal_melee_damage(from: PlayerEntity, to: PlayerEntity):
 	to.current_health -= from.melee_attack_damage
 
 
-func _deal_ranged_damage(from: Unit, to: Unit):
+func _deal_ranged_damage(from: PlayerEntity, to: PlayerEntity):
 	to.current_health -= from.ranged_attack_damage
 
 
 #Resolves the units based on the battle result enum from the _attack method
-func _resolve_attack(attacker: Unit, defender: Unit, battle_result: int):
+func _resolve_attack(attacker: PlayerEntity, defender: PlayerEntity, battle_result: int):
 	if battle_result == BATTLE_RESULT.ATTACKER_DIED:
-		_despawn_unit(attacker)
+		_despawn_entity(attacker)
 		
 	if battle_result == BATTLE_RESULT.DEFENDER_DIED:
 		var defender_tile = _get_tile(defender.coordinates)
-		_despawn_unit(defender)
+		_despawn_entity(defender)
 		if attacker.attack_range == 0:
 			_traverse_to_path(attacker, defender_tile.coordinates.x, defender_tile.coordinates.y)
 	
 	if battle_result == BATTLE_RESULT.BOTH_DIED:
-		_despawn_unit(attacker)
-		_despawn_unit(defender)
+		_despawn_entity(attacker)
+		_despawn_entity(defender)

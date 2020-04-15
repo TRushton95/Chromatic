@@ -56,10 +56,10 @@ margin_bottom = 0.0
 [node name="ResourceBar" parent="UI" instance=ExtResource( 2 )]
 
 [node name="PlayerTurn" parent="UI" instance=ExtResource( 6 )]
-anchor_left = 1.0
-anchor_right = 1.0
-margin_left = -88.0
-margin_right = 0.0
+anchor_left = 0.5
+anchor_right = 0.5
+margin_left = -44.0
+margin_right = 44.0
 script = ExtResource( 7 )
 
 [node name="EntitySelectionDropdown" parent="UI" instance=ExtResource( 8 )]

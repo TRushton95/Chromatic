@@ -71,6 +71,26 @@ func pop_resources() -> Array:
 	return [resource_node.resource_type, resource_node.quantity]
 
 
+func has_hostile_unit(current_team: int) -> bool:
+	return occupant && occupant.team != current_team
+
+
+func has_hostile_building(current_team: int) -> bool:
+	return building && building.team != current_team
+
+
+func has_hostile_player_entity(current_team: int) -> bool:
+	return has_hostile_unit(current_team) || has_hostile_building(current_team)
+
+
+func has_friendly_unit(current_team: int) -> bool:
+	return occupant && occupant.team == current_team
+
+
+func has_friendly_building(current_team: int) -> bool:
+	return building && building.team == current_team
+
+
 func show_red_filter():
 	get_node("RedFilter").visible = true
 
