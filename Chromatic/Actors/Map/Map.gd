@@ -48,11 +48,10 @@ var number_of_players = 2
 var buildings : Array
 var resource_nodes : Array
 var players = {}
+var multiple_entity_selection_storage : Array
 
 #Signals
-signal unit_selected
-signal building_selected
-signal resource_node_selected
+signal entity_selected
 signal multiple_entities_selected
 signal entity_deselected
 signal new_player_turn
@@ -125,6 +124,11 @@ func _on_AbilityBar_ability_selected(ability_type: int, data: Dictionary) -> voi
 			
 		Enums.ABILITY_TYPES.RESUME_CONSTRUCTION:
 			_set_worker_construction(selected_entity, !selected_entity.is_constructing) #Toggle construction
+
+
+func _on_EntitySelectionDropdown_option_selected(index: int) -> void:
+	_select_entity(multiple_entity_selection_storage[index])
+
 
 #Methods
 func _ready() -> void:
@@ -345,38 +349,37 @@ func _select_entity_at_tile(coordinates: Vector2) -> void:
 	if !tile:
 		return
 	
-	var has_unit = tile.occupant && tile.occupant.team == player_turn
-	var has_building = tile.building && tile.building.team == player_turn
-	var has_resource_node = tile.resource_node
-	
-	#No entities on tile
-	if !has_unit && !has_building && !has_resource_node:
+	var tile_entities = []
+	if tile.occupant && tile.occupant.team == player_turn:
+		tile_entities.push_front(tile.occupant)
+	if tile.building && tile.building.team == player_turn:
+		tile_entities.push_front(tile.building)
+	if tile.resource_node:
+		tile_entities.push_front(tile.resource_node)
+		
+	if tile_entities.size() <= 0:
 		print("Nothing to select")
 		return
-	
-	#Only has unit
-	if has_unit && !has_building && !has_resource_node:
-		selected_entity = tile.occupant
-		tile.show_yellow_filter()
-		emit_signal("unit_selected", tile.occupant)
+		
+	if tile_entities.size() == 1:
+		print("One entity to select")
+		_select_entity(tile_entities[0])
 		return
 	
-	#Only has building
-	if !has_unit && has_building && !has_resource_node:
-		selected_entity = tile.building
-		tile.show_yellow_filter()
-		emit_signal("building_selected", tile.building)
-		return
-	
-	#Only has resource node
-	if !has_unit && !has_building && has_resource_node:
-		selected_entity = tile.resource_node
-		tile.show_yellow_filter()
-		emit_signal("resource_selected", tile.resource_node)
-		return
-	
+	print("Multiple entities available to select")
+	multiple_entity_selection_storage = [ tile.occupant, tile.building, tile.resource_node ]
 	emit_signal("multiple_entities_selected", tile.occupant, tile.building, tile.resource_node)
+
+
+func _select_entity(entity: Entity):
+	if selected_entity:
+		_get_tile(selected_entity.coordinates).hide_yellow_filter()
+		
+	selected_entity = entity
+	_get_tile(selected_entity.coordinates).show_yellow_filter()
 	
+	emit_signal("entity_selected", selected_entity)
+
 
 func _deselect_entity() -> void:
 	if !selected_entity:
@@ -610,4 +613,3 @@ func _resolve_attack(attacker: Unit, defender: Unit, battle_result: int):
 	if battle_result == BATTLE_RESULT.BOTH_DIED:
 		_despawn_unit(attacker)
 		_despawn_unit(defender)
-		

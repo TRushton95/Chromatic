@@ -11,10 +11,16 @@ signal ability_selected
 
 
 #Event Handlers
-func _on_Map_unit_selected(unit: Unit) -> void:
-	if unit && unit.abilities:
+func _on_Map_entity_selected(entity: Entity) -> void:
+	if !entity:
+		print("Ability bar: no entity")
+		return
+	
+	if entity is Unit && entity.abilities:
 		visible = true
-		set_abilities(unit.abilities)
+		set_abilities(entity.abilities)
+	else:
+		visible = false
 
 
 func _on_Map_entity_deselected() -> void:

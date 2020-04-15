@@ -6,14 +6,17 @@ onready var name_node = get_node("Panel/HBoxContainer/Name")
 
 
 #Event Handlers
-func _on_Map_unit_selected(unit: Unit) -> void:
-	if !unit:
-		print_debug("Unit selected: No unit!")
+func _on_Map_entity_selected(entity: Entity) -> void:
+	if !entity:
+		print_debug("Entity selected: no entity")
 		return
 	
-	set_unit(unit)
+	if !entity is Unit:
+		visible = false
+		return
+	
+	set_unit(entity)
 	visible = true
-
 
 func _on_Map_entity_deselected() -> void:
 	visible = false
