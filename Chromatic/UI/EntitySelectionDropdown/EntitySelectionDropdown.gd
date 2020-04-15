@@ -34,6 +34,15 @@ func _on_Map_multiple_entities_selected(unit: Unit, building: Building, resource
 
 
 #Methods
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed:
+		var event_local = make_input_local(event)
+		var bounds = Rect2(Vector2(0, 0), rect_size)
+		
+		if !bounds.has_point(event_local.position):
+			visible = false
+
+
 func _set_options(unit: Unit, building: Building, resource_node: ResourceNode) -> void:
 	_set_option(unit, unit_option)
 	_set_option(building, building_option)
