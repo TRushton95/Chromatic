@@ -3,11 +3,8 @@ extends Control
 #Constants
 const MAX_ABILITY_COUNT = 4
 
-#Fields
-var abilities: Array
-
 #Signals
-signal ability_selected
+signal ability_pressed
 
 
 #Event Handlers
@@ -28,26 +25,23 @@ func _on_Map_entity_deselected() -> void:
 
 
 func _on_AbilityButton1_pressed() -> void:
-	emit_signal("ability_selected", abilities[0].type, abilities[0].data)
+	emit_signal("ability_pressed", 0)
 
 
 func _on_AbilityButton2_pressed() -> void:
-	emit_signal("ability_selected", abilities[1].type, abilities[1].data)
+	emit_signal("ability_pressed", 1)
 
 
 func _on_AbilityButton3_pressed() -> void:
-	emit_signal("ability_selected", abilities[2].type, abilities[2].data)
+	emit_signal("ability_pressed", 2)
 
 
 func _on_AbilityButton4_pressed() -> void:
-	emit_signal("ability_selected", abilities[3].type, abilities[3].data)
-
+	emit_signal("ability_pressed", 3)
 
 
 #Methods
-func set_abilities(new_abilities) -> void:
-	abilities = new_abilities
-	
+func set_abilities(abilities) -> void:
 	for i in range(0, MAX_ABILITY_COUNT):
 		var ability_button = get_node("Panel/HBoxContainer/AbilityButton" + str(i + 1))
 		

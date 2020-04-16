@@ -10,6 +10,7 @@ export var can_attack = false
 var current_health setget current_health_set
 var team = -1 setget team_set
 var abilities: Array
+var ability_queue = []
 
 
 #Methods
@@ -23,6 +24,33 @@ func _process(_delta: float) -> void:
 		.current_health_set(current_health - 2)
 	elif Input.is_key_pressed(KEY_RIGHT):
 		.current_health_set(current_health + 2)
+
+
+func queue_ability(index: int) -> void:
+	var ability = abilities[index]
+	var queue_item = {
+		"ability": ability,
+		"remaining_cast_time": ability.cast_time,
+		"caster": self
+	}
+	ability_queue.push_back(queue_item)
+	print("Ability queued: " + str(queue_item))
+
+
+func ability_queue_next() -> Ability:
+	if ability_queue.size() <= 0:
+		return null
+		
+	var queued_ability = ability_queue[0]
+	queued_ability.remaining_cast_time -= 1
+	print("Queue progress: " + str(queued_ability))
+	
+	if queued_ability.remaining_cast_time <= 0:
+		ability_queue.pop_front()
+		print("Ability progress complete")
+		return queued_ability.ability
+	
+	return null
 
 
 func current_health_set(health: int) -> void:

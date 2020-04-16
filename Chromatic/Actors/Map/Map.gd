@@ -44,6 +44,7 @@ var previous_hovered_tile : Tile
 var game_turn = 1
 var player_turn = 1
 var number_of_players = 2
+var units : Array
 var buildings : Array
 var resource_nodes : Array
 var players = {}
@@ -114,23 +115,33 @@ func _on_EndTurnButton_pressed() -> void:
 	_end_turn()
 
 
-func _on_AbilityBar_ability_selected(ability_type: int, data: Dictionary) -> void:
-	match ability_type:
-		Enums.ABILITY_TYPES.CONSTRUCT_BUILDING:
-			var building_type = data.building_type
-			var building_name = data.building_name
-			var building = _spawn_building(building_type, building_name, selected_entity.coordinates, selected_entity.team)
-			if building && building.construction_requires_worker:
-				var tile = _get_tile(selected_entity.coordinates)
-				_set_worker_construction(tile.occupant, true)
-			
-		Enums.ABILITY_TYPES.RESUME_CONSTRUCTION:
-			_set_worker_construction(selected_entity, !selected_entity.is_constructing) #Toggle construction
-		
-		Enums.ABILITY_TYPES.BUILD_UNIT:
-			var unit_type = data.unit_type
-			var unit_name = data.unit_name
-			var unit = _spawn_unit(unit_type, unit_name, selected_entity.coordinates, selected_entity.team)
+#func _on_AbilityBar_ability_selected(ability_type: int, data: Dictionary) -> void:
+#	match ability_type:
+#		Enums.ABILITY_TYPES.CONSTRUCT_BUILDING:
+#			var building_type = data.building_type
+#			var building_name = data.building_name
+#			var building = _spawn_building(building_type, building_name, selected_entity.coordinates, selected_entity.team)
+#			if building && building.construction_requires_worker:
+#				var tile = _get_tile(selected_entity.coordinates)
+#				_set_worker_construction(tile.occupant, true)
+#
+#		Enums.ABILITY_TYPES.RESUME_CONSTRUCTION:
+#			_set_worker_construction(selected_entity, !selected_entity.is_constructing) #Toggle construction
+#
+#		Enums.ABILITY_TYPES.BUILD_UNIT:
+#			var unit_type = data.unit_type
+#			var unit_name = data.unit_name
+#			var unit = _spawn_unit(unit_type, unit_name, selected_entity.coordinates, selected_entity.team)
+
+
+func _on_AbilityBar_ability_pressed(index: int) -> void:
+	var ability = selected_entity.abilities[index]
+	
+	if ability.cast_time > 0:
+		selected_entity.queue_ability(index)
+	else:
+		_cast_ability(ability, selected_entity)
+
 
 func _on_EntitySelectionDropdown_option_selected(index: int) -> void:
 	_select_entity(multiple_entity_selection_storage[index])
@@ -456,6 +467,7 @@ func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: 
 	unit.z_index = Z_INDEX.UNIT
 	unit.set_name(unit_name)
 	add_child(unit)
+	units.push_front(unit)
 	
 	return unit
 
@@ -520,20 +532,42 @@ func _spawn_building(building_type: int, building_name: String, coordinates: Vec
 	return building
 
 
-func resolve_turn():
+func _despawn_entity(entity: Entity) -> void:
+	var occupying_tile = _get_tile(entity.coordinates)
+	
+	if entity is Unit:
+		occupying_tile.occupant = null
+		units.erase(entity)
+	
+	if entity is Building:
+		occupying_tile.building = null	
+		buildings.erase(entity)
+	
+	if entity is ResourceNode:
+		occupying_tile.resource_node = null	
+		resource_nodes.erase(entity)
+	
+	entity.queue_free()
+
+
+func resolve_turn() -> void:
 	for building in buildings:
-		if !building.under_construction:
-			continue
+		#Resolve construction
+		if building.under_construction:
+			var building_tile = _get_tile(building.coordinates)
+			if !building.construction_requires_worker || building_tile.has_constructing_worker():
+				building.build_time_remaining -= 1
 			
-		var building_tile = _get_tile(building.coordinates)
-		if !building.construction_requires_worker || building_tile.has_constructing_worker():
-			building.build_time_remaining -= 1
+			if building.build_time_remaining <= 0:
+				building.under_construction = false
+				
+				if building_tile.has_constructing_worker():
+					_set_worker_construction(building_tile.occupant, false)
 		
-		if building.build_time_remaining <= 0:
-			building.under_construction = false
-			
-			if building_tile.has_constructing_worker():
-				_set_worker_construction(building_tile.occupant, false)
+		#Resolve queued abilities
+		var ability = building.ability_queue_next()
+		if ability:
+			_cast_ability(ability, building)
 				
 	for resource_node in resource_nodes:
 		var tile = _get_tile(resource_node.coordinates)
@@ -552,21 +586,23 @@ func resolve_turn():
 				_despawn_entity(resource_node)
 
 
-func _despawn_entity(entity: Entity) -> void:
-	var occupying_tile = _get_tile(entity.coordinates)
+func _cast_ability(ability: Ability, caster: PlayerEntity) -> void:
+	match ability.type:
+		Enums.ABILITY_TYPES.CONSTRUCT_BUILDING:
+			var building_type = ability.data.building_type
+			var building_name = ability.data.building_name
+			var building = _spawn_building(building_type, building_name, caster.coordinates, caster.team)
+			if building && building.construction_requires_worker:
+				var tile = _get_tile(caster.coordinates)
+				_set_worker_construction(tile.occupant, true)
 	
-	if entity is Unit:
-		occupying_tile.occupant = null
+		Enums.ABILITY_TYPES.RESUME_CONSTRUCTION:
+			_set_worker_construction(caster, !caster.is_constructing) #Toggle construction
 	
-	if entity is Building:
-		occupying_tile.building = null	
-		buildings.erase(entity)
-	
-	if entity is ResourceNode:
-		occupying_tile.resource_node = null	
-		resource_nodes.erase(entity)
-	
-	entity.queue_free()
+		Enums.ABILITY_TYPES.BUILD_UNIT:
+			var unit_type = ability.data.unit_type
+			var unit_name = ability.data.unit_name
+			var unit = _spawn_unit(unit_type, unit_name, caster.coordinates, caster.team)
 
 
 #Returns an enum flag indicating who died in the battle

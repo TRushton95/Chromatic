@@ -80,5 +80,5 @@ margin_bottom = 29.0
 [connection signal="new_player_turn" from="Map" to="UI/PlayerTurn" method="_on_Map_new_player_turn"]
 [connection signal="new_player_turn" from="Map" to="UI/ResourceBar" method="_on_Map_new_player_turn"]
 [connection signal="pressed" from="UI/EndTurnButton" to="Map" method="_on_EndTurnButton_pressed"]
-[connection signal="ability_selected" from="UI/AbilityBar" to="Map" method="_on_AbilityBar_ability_selected"]
+[connection signal="ability_pressed" from="UI/AbilityBar" to="Map" method="_on_AbilityBar_ability_pressed"]
 [connection signal="option_selected" from="UI/EntitySelectionDropdown" to="Map" method="_on_EntitySelectionDropdown_option_selected"]
