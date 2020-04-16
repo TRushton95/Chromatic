@@ -140,10 +140,11 @@ func _ready() -> void:
 		players[team] = Player.new(team, Lookups.TEAM_COLORS[team], STARTING_FOOD, STARTING_GOLD)
 	
 	_generate_test_map()
-	_spawn_unit(Enums.UNIT_TYPE.SETTLER, "Settler", Vector2(0,0), 1)
+	_spawn_unit(Enums.UNIT_TYPE.SETTLER, "Settler", Vector2(0, 0), 1)
 	_spawn_unit(Enums.UNIT_TYPE.ARCHER, "Archer", Vector2(7, 7), 1)
-	_spawn_unit(Enums.UNIT_TYPE.WARRIOR, "Warrior", Vector2(5,5), 2)
+	_spawn_unit(Enums.UNIT_TYPE.WARRIOR, "Warrior", Vector2(5,5 ), 2)
 	_spawn_unit(Enums.UNIT_TYPE.WORKER, "Worker", Vector2(3, 1), 2)
+	_spawn_unit(Enums.UNIT_TYPE.SETTLER, "Settler", Vector2(1, 0), 2)
 	
 	_spawn_resource_node(Enums.RESOURCE_TYPE.FOOD, "Food", Vector2(6, 1))
 	_spawn_resource_node(Enums.RESOURCE_TYPE.GOLD, "Gold", Vector2(8, 3))
@@ -273,6 +274,7 @@ func _try_place_resource_node(resource_node : ResourceNode, dest_coordinates: Ve
 	
 	return result
 
+
 func _get_path(from, to) -> PoolVector2Array:
 	var source_tile = get_node(_tile_name(from))
 	var destination_tile = get_node(_tile_name(to))
@@ -314,7 +316,7 @@ func _end_turn() -> void:
 	if player_turn > number_of_players:
 		player_turn = 1
 		game_turn += 1
-		resolve_turn()
+		_resolve_turn()
 		
 	_deselect_entity()
 	emit_signal("new_player_turn", players[player_turn])
@@ -344,6 +346,7 @@ func _set_worker_construction(worker: Worker, construct: bool):
 		print("Worker now constructing")
 	
 	return true
+
 
 func _select_entity_at_tile(coordinates: Vector2) -> void:
 	var tile = _get_tile(coordinates)
@@ -535,7 +538,7 @@ func _despawn_entity(entity: Entity) -> void:
 	entity.queue_free()
 
 
-func resolve_turn() -> void:
+func _resolve_turn() -> void:
 	for building in buildings:
 		#Resolve construction
 		if building.under_construction:
@@ -548,6 +551,11 @@ func resolve_turn() -> void:
 				
 				if building_tile.has_constructing_worker():
 					_set_worker_construction(building_tile.occupant, false)
+				
+				if building is Settlement:
+					var tiles_to_claim = Tile.get_tiles_in_radius(building.coordinates)
+					_try_claim_tiles(tiles_to_claim, building.team)
+					
 		
 		#Resolve queued abilities
 		var ability = building.ability_queue_next()
@@ -588,6 +596,24 @@ func _cast_ability(ability: Ability, caster: PlayerEntity) -> void:
 			var unit_type = ability.data.unit_type
 			var unit_name = ability.data.unit_name
 			var unit = _spawn_unit(unit_type, unit_name, caster.coordinates, caster.team)
+
+
+func _try_claim_tiles(tile_coordinates: Array, team: int):
+	var claimed_tiles = []
+	
+	for tile_coordinate in tile_coordinates:
+		var tile = _get_tile(tile_coordinate)
+		
+		print(tile_coordinates)
+		if !tile is Tile:
+			print("Attempted to claim item that is not a tile")
+			continue
+		
+		if tile.claimed_by == -1:
+			tile.claimed_by = team
+			claimed_tiles.push_back(tile)
+	
+	print("Claimed tiles: " + str(claimed_tiles.size()))
 
 
 #Returns an enum flag indicating who died in the battle

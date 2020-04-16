@@ -5,8 +5,9 @@ class_name Tile
 var occupant : Unit
 var building : Building
 var resource_node : ResourceNode
-var id: int
+var id : int
 var coordinates = Vector2(-1, -1)
+var claimed_by = -1 setget claimed_by_set
 
 #Signals
 signal tile_hovered
@@ -36,6 +37,17 @@ func _on_Hitbox_input_event(_viewport: Node, event: InputEvent, _shape_idx: int)
 	
 	if event is InputEventMouseButton && event.is_action_released("right_mouse"):
 		emit_signal("tile_right_mouse_released", coordinates)
+
+
+#Setgetters
+func claimed_by_set(value: int) -> void:
+	claimed_by = value
+	
+	if claimed_by == -1:
+		get_node("ClaimedMark").visible = false
+	else:
+		get_node("ClaimedMark").visible = true
+		get_node("ClaimedMark/TextureRect").modulate = Lookups.TEAM_COLORS[value]
 
 
 #Methods
@@ -91,6 +103,19 @@ func has_friendly_building(current_team: int) -> bool:
 	return building && building.team == current_team
 
 
+func get_adjacent_tiles() -> PoolVector2Array:
+	var adj_tiles = []
+		
+	adj_tiles.push_back(_top_left(coordinates))
+	adj_tiles.push_back(_top_right(coordinates))
+	adj_tiles.push_back(_right(coordinates))
+	adj_tiles.push_back(_bottom_right(coordinates))
+	adj_tiles.push_back(_bottom_left(coordinates))
+	adj_tiles.push_back(_left(coordinates))
+	
+	return adj_tiles
+
+
 func show_red_filter():
 	get_node("RedFilter").visible = true
 
@@ -115,57 +140,74 @@ func hide_yellow_filter():
 	get_node("YellowFilter").visible = false
 
 
-#Directions
-func right() -> Vector2:
-	return coordinates + Vector2(1, 0)
-
-
-func bottom_right() -> Vector2:
-	if _is_odd(coordinates.y):
-		return coordinates + Vector2(0, 1)
-	else:
-		return coordinates + Vector2(1, 1)
-
-
-func bottom_left() -> Vector2:
-	if _is_odd(coordinates.y):
-		return coordinates + Vector2(-1, 1)
-	else:
-		return coordinates + Vector2(0, 1)
-
-
-func left() -> Vector2:
-	return coordinates + Vector2(-1, 0)
-
-
-func top_left() -> Vector2:
-	if _is_odd(coordinates.y):
-		return coordinates + Vector2(-1, -1)
-	else:
-		return coordinates + Vector2(0, -1)
-
-
-func top_right() -> Vector2:
-	if _is_odd(coordinates.y):
-		return coordinates + Vector2(0, -1)
-	else:
-		return coordinates + Vector2(1, -1)
-
-
-func get_adjacent_tiles() -> PoolVector2Array:
-	var adj_tiles = []
+#Static Methods
+static func get_tiles_in_radius(center_tile: Vector2, radius = 1) -> PoolVector2Array:
+	var adj_tiles = [center_tile]
+	var current_tile = center_tile
+	var distance_to_corner = 1
+	
+	for i in range(0, radius):
+		current_tile = _bottom_left(current_tile)
 		
-	adj_tiles.push_back(top_left())
-	adj_tiles.push_back(top_right())
-	adj_tiles.push_back(right())
-	adj_tiles.push_back(bottom_right())
-	adj_tiles.push_back(bottom_left())
-	adj_tiles.push_back(left())
+		for j in range(0, distance_to_corner):
+			adj_tiles.push_back(current_tile)
+			current_tile = _top_left(current_tile)
+		for j in range(0, distance_to_corner):
+			adj_tiles.push_back(current_tile)
+			current_tile = _top_right(current_tile)
+		for j in range(0, distance_to_corner):
+			adj_tiles.push_back(current_tile)
+			current_tile = _right(current_tile)
+		for j in range(0, distance_to_corner):
+			adj_tiles.push_back(current_tile)
+			current_tile = _bottom_right(current_tile)
+		for j in range(0, distance_to_corner):
+			adj_tiles.push_back(current_tile)
+			current_tile = _bottom_left(current_tile)
+		for j in range(0, distance_to_corner):
+			adj_tiles.push_back(current_tile)
+			current_tile = _left(current_tile)
+		
+		distance_to_corner += 1
 	
 	return adj_tiles
 
 
-func _is_odd(row) -> bool:
-	return fmod(row, 2) == 1
+static func _right(coords: Vector2) -> Vector2:
+	return coords + Vector2(1, 0)
 
-#End Directions
+
+static func _bottom_right(coords: Vector2) -> Vector2:
+	if _is_odd(coords.y):
+		return coords + Vector2(0, 1)
+	else:
+		return coords + Vector2(1, 1)
+
+
+static func _bottom_left(coords: Vector2) -> Vector2:
+	if _is_odd(coords.y):
+		return coords + Vector2(-1, 1)
+	else:
+		return coords + Vector2(0, 1)
+
+
+static func _left(coords: Vector2) -> Vector2:
+	return coords + Vector2(-1, 0)
+
+
+static func _top_left(coords: Vector2) -> Vector2:
+	if _is_odd(coords.y):
+		return coords + Vector2(-1, -1)
+	else:
+		return coords + Vector2(0, -1)
+
+
+static func _top_right(coords: Vector2) -> Vector2:
+	if _is_odd(coords.y):
+		return coords + Vector2(0, -1)
+	else:
+		return coords + Vector2(1, -1)
+
+
+static func _is_odd(row) -> bool:
+	return fmod(row, 2) == 1

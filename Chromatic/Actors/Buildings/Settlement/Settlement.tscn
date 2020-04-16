@@ -7,7 +7,7 @@
 script = ExtResource( 2 )
 max_health = 500
 construction_requires_worker = false
-build_time = 3
+build_time = 1
 
 [node name="Sprite" type="Sprite" parent="."]
 texture = ExtResource( 1 )
