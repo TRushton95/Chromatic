@@ -115,26 +115,11 @@ func _on_EndTurnButton_pressed() -> void:
 	_end_turn()
 
 
-#func _on_AbilityBar_ability_selected(ability_type: int, data: Dictionary) -> void:
-#	match ability_type:
-#		Enums.ABILITY_TYPES.CONSTRUCT_BUILDING:
-#			var building_type = data.building_type
-#			var building_name = data.building_name
-#			var building = _spawn_building(building_type, building_name, selected_entity.coordinates, selected_entity.team)
-#			if building && building.construction_requires_worker:
-#				var tile = _get_tile(selected_entity.coordinates)
-#				_set_worker_construction(tile.occupant, true)
-#
-#		Enums.ABILITY_TYPES.RESUME_CONSTRUCTION:
-#			_set_worker_construction(selected_entity, !selected_entity.is_constructing) #Toggle construction
-#
-#		Enums.ABILITY_TYPES.BUILD_UNIT:
-#			var unit_type = data.unit_type
-#			var unit_name = data.unit_name
-#			var unit = _spawn_unit(unit_type, unit_name, selected_entity.coordinates, selected_entity.team)
-
-
 func _on_AbilityBar_ability_pressed(index: int) -> void:
+	if selected_entity is Building && selected_entity.under_construction:
+		print("Building cannot use ability while under construction")
+		return
+	
 	var ability = selected_entity.abilities[index]
 	
 	if ability.cast_time > 0:
