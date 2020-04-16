@@ -9,11 +9,7 @@ signal ability_pressed
 
 #Event Handlers
 func _on_Map_entity_selected(entity: Entity) -> void:
-	if !entity || entity is ResourceNode:
-		print("Failed to display ability bar")
-		return
-	
-	if !entity.abilities || (entity is Building && entity.under_construction):
+	if !entity || !entity.abilities || entity is ResourceNode || (entity is Building && entity.under_construction):
 		visible = false
 		return
 	
