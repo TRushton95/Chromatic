@@ -13,11 +13,12 @@ func _on_Map_entity_selected(entity: Entity) -> void:
 		print("Failed to display ability bar")
 		return
 	
-	if entity.abilities:
-		visible = true
-		set_abilities(entity.abilities)
-	else:
+	if !entity.abilities || (entity is Building && entity.under_construction):
 		visible = false
+		return
+	
+	set_abilities(entity.abilities)
+	visible = true
 
 
 func _on_Map_entity_deselected() -> void:
