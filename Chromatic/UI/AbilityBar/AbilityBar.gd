@@ -9,7 +9,7 @@ signal ability_pressed
 
 #Event Handlers
 func _on_Map_entity_selected(entity: Entity) -> void:
-	if !entity || !entity.abilities || entity is ResourceNode || (entity is Building && entity.under_construction):
+	if !entity || entity is ResourceNode || (entity is Building && entity.under_construction) || !entity.abilities:
 		visible = false
 		return
 	
