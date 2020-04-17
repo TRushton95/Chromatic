@@ -414,6 +414,7 @@ func _deselect_entity() -> void:
 
 	var selected_entity_tile = _get_tile(selected_entity.coordinates)
 	selected_entity_tile.hide_yellow_filter()
+	selected_entity = null
 	emit_signal("entity_deselected")
 
 
@@ -561,6 +562,9 @@ func _despawn_entity(entity: Entity) -> void:
 		occupying_tile.resource_node = null	
 		resource_nodes.erase(entity)
 	
+	if selected_entity == entity:
+		_deselect_entity()
+		
 	entity.queue_free()
 
 
@@ -622,9 +626,13 @@ func _cast_ability(ability: Ability, caster: PlayerEntity) -> void:
 			var building_type = ability.data.building_type
 			var building_name = ability.data.building_name
 			var building = _spawn_building(building_type, building_name, caster.coordinates, caster.team)
+			
 			if building && building.construction_requires_worker:
 				var tile = _get_tile(caster.coordinates)
 				_set_worker_construction(tile.occupant, true)
+				
+			if building is Settlement && caster is Settler:
+				_despawn_entity(caster)
 	
 		Enums.ABILITY_TYPES.RESUME_CONSTRUCTION:
 			_set_worker_construction(caster, !caster.is_constructing) #Toggle construction
