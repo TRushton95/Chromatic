@@ -56,6 +56,7 @@ signal multiple_entities_selected
 signal entity_deselected
 signal new_player_turn
 signal new_game_turn
+signal resource_updated
 
 
 #Event Handlers
@@ -121,6 +122,20 @@ func _on_AbilityBar_ability_pressed(index: int) -> void:
 		return
 	
 	var ability = selected_entity.abilities[index]
+	if !ability:
+		print("Ability index " + str(index) + " not found on entity")
+	
+	var player = players[player_turn]
+	if player.food < ability.food_cost:
+		print("Insufficient food")
+		return
+		
+	if player.gold < ability.gold_cost:
+		print("Insufficient gold")
+		return
+	
+	player.food -= ability.food_cost
+	player.gold -= ability.gold_cost
 	
 	if ability.cast_time > 0:
 		selected_entity.queue_ability(index)
@@ -132,12 +147,18 @@ func _on_EntitySelectionDropdown_option_selected(index: int) -> void:
 	_select_entity(multiple_entity_selection_storage[index])
 
 
+func _on_Player_resource_update(resource_type: int, value: int) -> void:
+	emit_signal("resource_updated", resource_type, value)
+
+
 #Methods
 func _ready() -> void:
 	#TODO - food test code
 	for i in range(0, number_of_players):
 		var team = i + 1
-		players[team] = Player.new(team, Lookups.TEAM_COLORS[team], STARTING_FOOD, STARTING_GOLD)
+		var player = Player.new(team, Lookups.TEAM_COLORS[team], STARTING_FOOD, STARTING_GOLD)
+		player.connect("resource_updated", self, "_on_Player_resource_update")
+		players[team] = player
 	
 	_generate_test_map()
 	_spawn_unit(Enums.UNIT_TYPE.SETTLER, "Settler", Vector2(0, 0), 1)
@@ -318,6 +339,7 @@ func _end_turn() -> void:
 		game_turn += 1
 		_resolve_turn()
 		
+	_set_astar_routing(player_turn)
 	_deselect_entity()
 	emit_signal("new_player_turn", players[player_turn])
 
@@ -583,6 +605,16 @@ func _resolve_turn() -> void:
 				_despawn_entity(resource_node)
 
 
+func _set_astar_routing(team) -> void:
+	for tile_key in tile_lookup:
+		var tile = tile_lookup[tile_key]
+		if tile.occupant && tile.occupant.team != team:
+			print("Disabled " + str(tile_key))
+			astar.set_point_disabled(tile.id, true)
+		else:
+			astar.set_point_disabled(tile.id, false)
+
+
 func _cast_ability(ability: Ability, caster: PlayerEntity) -> void:
 	match ability.type:
 		Enums.ABILITY_TYPES.CONSTRUCT_BUILDING:
@@ -600,6 +632,9 @@ func _cast_ability(ability: Ability, caster: PlayerEntity) -> void:
 			var unit_type = ability.data.unit_type
 			var unit_name = ability.data.unit_name
 			var unit = _spawn_unit(unit_type, unit_name, caster.coordinates, caster.team)
+		
+		_:
+			print("Ability type not recognised")
 
 
 func _try_claim_tiles(tile_coordinates: Array, team: int):
@@ -608,7 +643,6 @@ func _try_claim_tiles(tile_coordinates: Array, team: int):
 	for tile_coordinate in tile_coordinates:
 		var tile = _get_tile(tile_coordinate)
 		
-		print(tile_coordinates)
 		if !tile is Tile:
 			print("Attempted to claim item that is not a tile")
 			continue
@@ -616,8 +650,6 @@ func _try_claim_tiles(tile_coordinates: Array, team: int):
 		if tile.claimed_by == -1:
 			tile.claimed_by = team
 			claimed_tiles.push_back(tile)
-	
-	print("Claimed tiles: " + str(claimed_tiles.size()))
 
 
 #Returns an enum flag indicating who died in the battle
