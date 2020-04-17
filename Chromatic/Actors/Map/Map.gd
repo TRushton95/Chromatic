@@ -66,21 +66,11 @@ func _on_tile_clicked(coordinates : Vector2) -> void:
 
 func _on_tile_hovered(coordinates: Vector2) -> void:
 	pass
-#	var hovered_tile = _get_tile(coordinates)
-#	if hovered_tile && hovered_tile.occupant != null:
-#		hovered_tile.occupant.show_health_bar()
 		
 	if Input.is_mouse_button_pressed(BUTTON_RIGHT):
 		_clear_tile_path()
 		if selected_entity && selected_entity is Unit:
 			_map_path(selected_entity.coordinates, coordinates)
-
-
-func _on_tile_unhovered(coordinates: Vector2) -> void:
-	pass
-#	var hovered_tile = _get_tile(coordinates)
-#	if hovered_tile && hovered_tile.occupant  && hovered_tile.occupant != selected_unit:
-#		hovered_tile.occupant.hide_health_bar()
 
 
 func _on_tile_right_clicked(coordinates: Vector2) -> void:
@@ -202,7 +192,6 @@ func _generate_test_map():
 			tile.position += Vector2(TILE_DIAMETER / 2.0, TILE_DIAMETER / 2.0) # offset from 0
 			tile.coordinates = Vector2(x, y)
 			tile.id = id
-			#tile.fog_of_war = true
 			
 			var weight_scale = 1.0
 			astar.add_point(tile.id, tile.coordinates, weight_scale)
@@ -213,7 +202,6 @@ func _generate_test_map():
 			tile.connect("tile_clicked", self, "_on_tile_clicked")
 			tile.connect("tile_right_clicked", self, "_on_tile_right_clicked")
 			tile.connect("tile_hovered", self, "_on_tile_hovered")
-			tile.connect("tile_unhovered", self, "_on_tile_unhovered")
 			tile.connect("tile_right_mouse_released", self, "_on_tile_right_mouse_released")
 			tile_lookup[_tile_name(Vector2(x, y))] = tile
 			add_child(tile)
@@ -282,7 +270,7 @@ func _try_place_unit(unit, dest_coordinates) -> bool:
 	var destination_tile = get_node(_tile_name(dest_coordinates))
 	var source_tile = _get_tile(unit.coordinates)
 	
-	if !destination_tile && destination_tile.occupant:
+	if !destination_tile || destination_tile.occupant:
 		return false
 	
 	destination_tile.occupant = unit
@@ -329,7 +317,7 @@ func _update_entity_vision(entity: PlayerEntity, prev_tile: Tile = null):
 		var old_tile_coords = Tile.get_tiles_in_radius(prev_tile.coordinates, entity.vision_range)
 		var old_tiles = _get_tiles(old_tile_coords)
 		for tile in old_tiles:
-			tile.remove_team_vision_count(entity.team, 1)
+			tile.add_team_vision_count(entity.team, -1)
 	
 	#Increment new tile vision count
 	var visible_tile_coords = Tile.get_tiles_in_radius(entity.coordinates, entity.vision_range)
@@ -341,13 +329,14 @@ func _update_entity_vision(entity: PlayerEntity, prev_tile: Tile = null):
 func _set_team_fog_of_war(team: int) -> void:
 	for tile_key in tile_lookup:
 		var tile = tile_lookup[tile_key]
-		tile.fog_of_war = true
+		tile.set_fog_of_war_for_team(team)
+#		tile.fog_of_war = true
+#
+#	for unit in units:
+#		if unit.team == team:
+#			_update_entity_vision(unit)
 	
-	for unit in units:
-		if unit.team == team:
-			_update_entity_vision(unit)
-			pass
-
+	
 func _get_path(from, to) -> PoolVector2Array:
 	var source_tile = get_node(_tile_name(from))
 	var destination_tile = get_node(_tile_name(to))
@@ -389,10 +378,10 @@ func _end_turn() -> void:
 	if player_turn > number_of_players:
 		player_turn = 1
 		game_turn += 1
-		_resolve_turn()
+		_resolve_game_turn()
 		
-	_set_astar_routing(player_turn)
 	_set_team_fog_of_war(player_turn)
+	_set_astar_routing(player_turn)
 	_deselect_entity()
 	emit_signal("new_player_turn", players[player_turn])
 
@@ -622,7 +611,7 @@ func _despawn_entity(entity: Entity) -> void:
 	entity.queue_free()
 
 
-func _resolve_turn() -> void:
+func _resolve_game_turn() -> void:
 	for building in buildings:
 		#Resolve construction
 		if building.under_construction:
@@ -668,7 +657,7 @@ func _resolve_turn() -> void:
 func _set_astar_routing(team) -> void:
 	for tile_key in tile_lookup:
 		var tile = tile_lookup[tile_key]
-		if tile.occupant && tile.occupant.team != team:
+		if !tile.fog_of_war && tile.occupant && tile.occupant.team != team:
 			astar.set_point_disabled(tile.id, true)
 		else:
 			astar.set_point_disabled(tile.id, false)

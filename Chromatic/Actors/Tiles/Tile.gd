@@ -52,6 +52,29 @@ func claimed_by_set(value: int) -> void:
 		get_node("ClaimedMark/TextureRect").modulate = Lookups.TEAM_COLORS[value]
 
 
+#TODO this logic needs properly setting (whatever that means)
+func fog_of_war_set(value: bool) -> void:
+	fog_of_war = value
+	
+	if value:
+		get_node("Sprite").modulate = Color(0.5, 0.5, 0.5)
+		if occupant:
+			occupant.hide()
+		if building:
+			building.hide()
+		if resource_node:
+			resource_node.hide()
+			
+	else:
+		get_node("Sprite").modulate = Color(1, 1, 1)
+		if occupant:
+			occupant.show()
+		if building:
+			building.show()
+		if resource_node:
+			resource_node.show()
+
+
 #Methods
 func _ready() -> void:
 	#TEST
@@ -123,43 +146,21 @@ func pop_resources() -> Array:
 
 
 func add_team_vision_count(team: int, count: int):
-	if count <= 0 || !_team_vision_count_lookup.has(team):
+	if !_team_vision_count_lookup.has(team):
 		return
 	
 	_team_vision_count_lookup[team] += count
 	
-	if _team_vision_count_lookup[team] > 0:
-		fog_of_war_set(false)
+	var fog = _team_vision_count_lookup[team] <= 0
+	fog_of_war_set(fog)
 
 
-func remove_team_vision_count(team: int, count: int) -> void:
-	if count <= 0 || !_team_vision_count_lookup.has(team):
+func set_fog_of_war_for_team(team: int) -> void:
+	if !_team_vision_count_lookup.has(team):
 		return
 	
-	_team_vision_count_lookup[team] -= count
-	
-	if _team_vision_count_lookup[team] <= 0:
-		fog_of_war_set(true)
+	fog_of_war_set(!_team_vision_count_lookup[team])
 
-
-func fog_of_war_set(active: bool) -> void:
-	if active:
-		get_node("Sprite").modulate = Color(0.5, 0.5, 0.5)
-		if occupant:
-			occupant.hide()
-		if building:
-			building.hide()
-		if resource_node:
-			resource_node.hide()
-			
-	else:
-		get_node("Sprite").modulate = Color(1, 1, 1)
-		if occupant:
-			occupant.show()
-		if building:
-			building.show()
-		if resource_node:
-			resource_node.show()
 
 func has_hostile_unit(current_team: int) -> bool:
 	return occupant && occupant.team != current_team
