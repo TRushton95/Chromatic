@@ -579,7 +579,7 @@ func _resolve_turn() -> void:
 					_set_worker_construction(building_tile.occupant, false)
 				
 				if building is Settlement:
-					var tiles_to_claim = Tile.get_tiles_in_radius(building.coordinates)
+					var tiles_to_claim = Tile.get_tiles_in_radius(building.coordinates, 2)
 					_try_claim_tiles(tiles_to_claim, building.team)
 					
 		
@@ -596,9 +596,11 @@ func _resolve_turn() -> void:
 			
 			match harvested_resources[0]:
 				Enums.RESOURCE_TYPE.FOOD:
-					players[tile.building.team].food += harvested_resources[1]
+					players[tile.claimed_by].food += harvested_resources[1]
+					print("Team " + str(tile.claimed_by) + " claimed " + str(harvested_resources[1]) + " food")
 				Enums.RESOURCE_TYPE.GOLD:
-					players[tile.building.team].gold += harvested_resources[1]
+					players[tile.claimed_by].gold += harvested_resources[1]
+					print("Team " + str(tile.claimed_by) + " claimed " + str(harvested_resources[1]) + " gold")
 			
 			if resource_node.remaining_charges <= 0:
 				print("Resource node mined out")
@@ -609,7 +611,6 @@ func _set_astar_routing(team) -> void:
 	for tile_key in tile_lookup:
 		var tile = tile_lookup[tile_key]
 		if tile.occupant && tile.occupant.team != team:
-			print("Disabled " + str(tile_key))
 			astar.set_point_disabled(tile.id, true)
 		else:
 			astar.set_point_disabled(tile.id, false)

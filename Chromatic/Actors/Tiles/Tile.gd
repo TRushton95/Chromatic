@@ -59,28 +59,57 @@ func has_constructing_worker() -> bool:
 	return occupant && occupant is Worker && occupant.is_constructing
 
 
-func is_harvesting() -> bool:
+func is_resource_developed() -> bool:
 	if !building || building.under_construction:
 		return false
 	
+	var result = false
+	
 	if resource_node is Food and building is HuntingCamp:
-		return true
-	if resource_node is Gold and building is MiningCamp:
+		result = true
+	elif resource_node is Gold and building is MiningCamp:
+		result = true
+	
+	return result
+
+
+func is_harvesting() -> bool:
+	if !resource_node:
+		return false
+	
+	#Claiming undeveloped resources
+	if resource_node.basic && claimed_by >= 0:
 		return true
 	
-	return false 
+	if !building || building.under_construction:
+		return false
+	
+	#Claiming developed resources
+	if is_resource_developed():
+		return true
+	
+	return false
 
 
 func pop_resources() -> Array:
 	if !resource_node:
 		print("No resource node on this tile")
+		return []
 	
 	if resource_node.remaining_charges <= 0:
 		print("Resource node has no remaining charges")
+		return []
 	
-	resource_node.remaining_charges -= 1
+	var harvest = 1
+	if is_resource_developed():
+		if resource_node.remaining_charges < resource_node.resource_yield:
+			harvest = resource_node.remaining_charges
+		else:
+			harvest = resource_node.resource_yield
 	
-	return [resource_node.resource_type, resource_node.quantity]
+	resource_node.remaining_charges -= harvest
+	
+	return [resource_node.resource_type, harvest]
 
 
 func has_hostile_unit(current_team: int) -> bool:
