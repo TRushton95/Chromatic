@@ -7,6 +7,7 @@ export var melee_attack_damage = 0
 export var ranged_attack_damage = 0
 export var attack_range = 0
 export var can_attack = false
+export var vision_range = 2
 var current_health setget current_health_set
 var team = -1 setget team_set
 var abilities: Array

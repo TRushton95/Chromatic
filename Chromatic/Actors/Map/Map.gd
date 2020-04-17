@@ -169,6 +169,7 @@ func _ready() -> void:
 	
 	_spawn_resource_node(Enums.RESOURCE_TYPE.FOOD, "Food", Vector2(6, 1))
 	_spawn_resource_node(Enums.RESOURCE_TYPE.GOLD, "Gold", Vector2(8, 3))
+	_set_team_fog_of_war(1)
 	_set_astar_routing(1)
 	
 	emit_signal("new_player_turn", players[1])
@@ -182,6 +183,14 @@ func _process(_delta: float) -> void:
 		_deselect_entity()
 
 
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey:
+		if event.scancode == KEY_1:
+			_set_team_fog_of_war(1)
+		if event.scancode == KEY_2:
+			_set_team_fog_of_war(2)
+
+
 func _generate_test_map():
 	var id = 0
 	
@@ -193,6 +202,7 @@ func _generate_test_map():
 			tile.position += Vector2(TILE_DIAMETER / 2.0, TILE_DIAMETER / 2.0) # offset from 0
 			tile.coordinates = Vector2(x, y)
 			tile.id = id
+			#tile.fog_of_war = true
 			
 			var weight_scale = 1.0
 			astar.add_point(tile.id, tile.coordinates, weight_scale)
@@ -222,6 +232,7 @@ func _connect_to_adjacent_tiles(tile):
 			var adj_tile = tile_lookup[adj_tile_key]
 			astar.connect_points(tile.id, adj_tile.id)
 
+
 func _tile_name(coordinates: Vector2) -> String:
 	return "tile_" + str(coordinates.x) + "," + str(coordinates.y)
 
@@ -232,6 +243,17 @@ func _get_tile(coordinates: Vector2) -> Node:
 	var tile_name = _tile_name(coordinates)
 	if has_node(tile_name):
 		result = get_node(tile_name)
+	
+	return result
+
+
+func _get_tiles(tile_set_coordinates: PoolVector2Array) -> Array:
+	var result = []
+	
+	for tile_coordinates in tile_set_coordinates:
+		var tile = _get_tile(tile_coordinates)
+		if tile:
+			result.push_back(tile)
 	
 	return result
 
@@ -257,24 +279,25 @@ func _try_place_building(building, dest_coordinates: Vector2) -> bool:
 
 
 func _try_place_unit(unit, dest_coordinates) -> bool:
-	var result = false
-	var source_tile = _get_tile(unit.coordinates)
 	var destination_tile = get_node(_tile_name(dest_coordinates))
+	var source_tile = _get_tile(unit.coordinates)
 	
-	if destination_tile && !destination_tile.occupant:
-		destination_tile.occupant = unit
-		unit.coordinates = destination_tile.coordinates
-		unit.position = destination_tile.position
-		
-		if source_tile:
-			source_tile.occupant = null
-			
-		result = true
+	if !destination_tile && destination_tile.occupant:
+		return false
+	
+	destination_tile.occupant = unit
+	unit.coordinates = destination_tile.coordinates
+	unit.position = destination_tile.position
+	
+	if source_tile:
+		source_tile.occupant = null
 	
 	if unit is Worker && unit.is_constructing:
 		_set_worker_construction(unit, false)
 	
-	return result
+	_update_entity_vision(unit, source_tile)
+	
+	return true
 
 
 func _try_place_resource_node(resource_node : ResourceNode, dest_coordinates: Vector2) -> bool:
@@ -296,6 +319,34 @@ func _try_place_resource_node(resource_node : ResourceNode, dest_coordinates: Ve
 	
 	return result
 
+
+func _update_entity_vision(entity: PlayerEntity, prev_tile: Tile = null):
+	if !entity:
+		return
+	
+	#Decrement old tile vision count
+	if prev_tile:
+		var old_tile_coords = Tile.get_tiles_in_radius(prev_tile.coordinates, entity.vision_range)
+		var old_tiles = _get_tiles(old_tile_coords)
+		for tile in old_tiles:
+			tile.remove_team_vision_count(entity.team, 1)
+	
+	#Increment new tile vision count
+	var visible_tile_coords = Tile.get_tiles_in_radius(entity.coordinates, entity.vision_range)
+	var visible_tiles = _get_tiles(visible_tile_coords)
+	for tile in visible_tiles:
+		tile.add_team_vision_count(entity.team, 1)
+
+
+func _set_team_fog_of_war(team: int) -> void:
+	for tile_key in tile_lookup:
+		var tile = tile_lookup[tile_key]
+		tile.fog_of_war = true
+	
+	for unit in units:
+		if unit.team == team:
+			_update_entity_vision(unit)
+			pass
 
 func _get_path(from, to) -> PoolVector2Array:
 	var source_tile = get_node(_tile_name(from))
@@ -341,6 +392,7 @@ func _end_turn() -> void:
 		_resolve_turn()
 		
 	_set_astar_routing(player_turn)
+	_set_team_fog_of_war(player_turn)
 	_deselect_entity()
 	emit_signal("new_player_turn", players[player_turn])
 
@@ -468,17 +520,18 @@ func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: 
 		_:
 			print("Cannot locate unit type " + str(unit_type) + " to spawn")
 			return null
+	unit.team = team
+	unit.z_index = Z_INDEX.UNIT
+	unit.set_name(unit_name)
+	add_child(unit)
 	
 	var success = _try_place_unit(unit, coordinates)
 	
 	if !success:
 		print("Failed to place unit at " + str(coordinates))
+		unit.queue_free()
 		return null
 	
-	unit.team = team
-	unit.z_index = Z_INDEX.UNIT
-	unit.set_name(unit_name)
-	add_child(unit)
 	units.push_front(unit)
 	
 	return unit

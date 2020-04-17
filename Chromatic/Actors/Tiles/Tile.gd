@@ -8,6 +8,8 @@ var resource_node : ResourceNode
 var id : int
 var coordinates = Vector2(-1, -1)
 var claimed_by = -1 setget claimed_by_set
+var _team_vision_count_lookup : Dictionary
+var fog_of_war : bool setget fog_of_war_set
 
 #Signals
 signal tile_hovered
@@ -51,6 +53,14 @@ func claimed_by_set(value: int) -> void:
 
 
 #Methods
+func _ready() -> void:
+	#TEST
+	_team_vision_count_lookup = {
+		1: 0,
+		2: 0
+	}
+
+
 func has_building_under_construction() -> bool:
 	return building && building.under_construction
 
@@ -111,6 +121,45 @@ func pop_resources() -> Array:
 	
 	return [resource_node.resource_type, harvest]
 
+
+func add_team_vision_count(team: int, count: int):
+	if count <= 0 || !_team_vision_count_lookup.has(team):
+		return
+	
+	_team_vision_count_lookup[team] += count
+	
+	if _team_vision_count_lookup[team] > 0:
+		fog_of_war_set(false)
+
+
+func remove_team_vision_count(team: int, count: int) -> void:
+	if count <= 0 || !_team_vision_count_lookup.has(team):
+		return
+	
+	_team_vision_count_lookup[team] -= count
+	
+	if _team_vision_count_lookup[team] <= 0:
+		fog_of_war_set(true)
+
+
+func fog_of_war_set(active: bool) -> void:
+	if active:
+		get_node("Sprite").modulate = Color(0.5, 0.5, 0.5)
+		if occupant:
+			occupant.hide()
+		if building:
+			building.hide()
+		if resource_node:
+			resource_node.hide()
+			
+	else:
+		get_node("Sprite").modulate = Color(1, 1, 1)
+		if occupant:
+			occupant.show()
+		if building:
+			building.show()
+		if resource_node:
+			resource_node.show()
 
 func has_hostile_unit(current_team: int) -> bool:
 	return occupant && occupant.team != current_team
