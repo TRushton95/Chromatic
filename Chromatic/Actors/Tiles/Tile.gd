@@ -239,4 +239,4 @@ static func _top_right(coords: Vector2) -> Vector2:
 
 
 static func _is_odd(row) -> bool:
-	return fmod(row, 2) == 1
+	return abs(fmod(row, 2)) == 1
