@@ -4,6 +4,7 @@ class_name Building
 #Fields
 onready var construction_timer = get_node("ConstructionTimer")
 
+export var requires_territory = true
 export var construction_requires_worker = true
 export var build_time = 0
 var build_time_remaining: int setget build_time_remaining_set

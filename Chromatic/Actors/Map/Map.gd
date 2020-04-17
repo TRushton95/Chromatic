@@ -490,6 +490,10 @@ func _spawn_building(building_type: int, building_name: String, coordinates: Vec
 			print("Cannot locate building type " + str(building_type) + " to spawn")
 			return null
 			
+	if building.requires_territory && dest_tile.claimed_by != team:
+		print("Building must be placed in your territory")
+		return null
+		
 	var success = _try_place_building(building, coordinates)
 	
 	if !success:
