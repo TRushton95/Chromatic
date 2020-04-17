@@ -165,10 +165,11 @@ func _ready() -> void:
 	_spawn_unit(Enums.UNIT_TYPE.ARCHER, "Archer", Vector2(7, 7), 1)
 	_spawn_unit(Enums.UNIT_TYPE.WARRIOR, "Warrior", Vector2(5,5 ), 2)
 	_spawn_unit(Enums.UNIT_TYPE.WORKER, "Worker", Vector2(3, 1), 2)
-	_spawn_unit(Enums.UNIT_TYPE.SETTLER, "Settler", Vector2(1, 0), 2)
+	#_spawn_unit(Enums.UNIT_TYPE.SETTLER, "Settler", Vector2(1, 0), 2)
 	
 	_spawn_resource_node(Enums.RESOURCE_TYPE.FOOD, "Food", Vector2(6, 1))
 	_spawn_resource_node(Enums.RESOURCE_TYPE.GOLD, "Gold", Vector2(8, 3))
+	_set_astar_routing(1)
 	
 	emit_signal("new_player_turn", players[1])
 
