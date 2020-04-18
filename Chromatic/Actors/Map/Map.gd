@@ -74,6 +74,10 @@ func _on_tile_hovered(coordinates: Vector2) -> void:
 
 
 func _on_tile_right_clicked(coordinates: Vector2) -> void:
+	var dest_tile = _get_tile(coordinates)
+	if !dest_tile.fog_of_war && dest_tile.occupant:
+		return
+	
 	if selected_entity && selected_entity is Unit:
 		_map_path(selected_entity.coordinates, coordinates)
 
@@ -86,13 +90,12 @@ func _on_tile_right_mouse_released(coordinates: Vector2) -> void:
 	
 	if tile.fog_of_war:
 		_traverse_to_path(selected_entity, coordinates.x, coordinates.y)
-		print("Tile in fog, going there")
 		return
 	
 	#Hostile player entity
 	if tile.has_hostile_player_entity(player_turn):
 		if !selected_entity.can_attack:
-			print("This unit cannot attack!")
+			print("This unit cannot attack")
 			return
 		
 		var hostile_player_entity = tile.building if tile.has_hostile_building(player_turn) else tile.occupant
@@ -370,6 +373,24 @@ func _get_path(from, to) -> PoolVector2Array:
 	return result
 
 
+func _get_combat_path(from: Vector2, to: Vector2) -> PoolVector2Array:
+	var disabled_tiles = []
+	
+	for tile_key in tile_lookup:
+		var tile = tile_lookup[tile_key]
+		
+		if astar.is_point_disabled(tile.id):
+			disabled_tiles.push_back(tile)
+			astar.set_point_disabled(tile.id, false)
+	
+	var result = _get_path(from, to)
+	
+	for disabled_tile in disabled_tiles:
+		astar.set_point_disabled(disabled_tile.id, true)
+	
+	return result
+
+
 func _traverse_to_path(unit, x, y) -> void:
 	_get_tile(unit.coordinates).hide_yellow_filter()
 	var point_path = _get_path(unit.coordinates, Vector2(x, y))
@@ -630,6 +651,8 @@ func _despawn_entity(entity: Entity) -> void:
 	if entity is Unit:
 		occupying_tile.occupant = null
 		units.erase(entity)
+		if entity.team != player_turn:
+			astar.set_point_disabled(occupying_tile.id, false)
 	
 	if entity is Building:
 		occupying_tile.building = null	
@@ -740,7 +763,7 @@ func _try_claim_tiles(tile_coordinates: Array, team: int):
 
 #Returns an enum flag indicating who died in the battle
 func _attack(attacker: PlayerEntity, defender: PlayerEntity) -> int:
-	var distance = _get_path(attacker.coordinates, defender.coordinates).size()
+	var distance = _get_combat_path(attacker.coordinates, defender.coordinates).size()
 	var is_ranged_attack = attacker.attack_range > 0
 	
 	if is_ranged_attack && attacker.attack_range >= distance:
@@ -763,7 +786,7 @@ func _attack(attacker: PlayerEntity, defender: PlayerEntity) -> int:
 		result = BATTLE_RESULT.ATTACKER_DIED
 	elif defender_died:
 		result = BATTLE_RESULT.DEFENDER_DIED
-
+	
 	return result
 
 
