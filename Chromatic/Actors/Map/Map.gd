@@ -84,6 +84,11 @@ func _on_tile_right_mouse_released(coordinates: Vector2) -> void:
 	
 	var tile = _get_tile(coordinates)
 	
+	if tile.fog_of_war:
+		_traverse_to_path(selected_entity, coordinates.x, coordinates.y)
+		print("Tile in fog, going there")
+		return
+	
 	#Hostile player entity
 	if tile.has_hostile_player_entity(player_turn):
 		if !selected_entity.can_attack:
@@ -286,6 +291,7 @@ func _try_place_unit(unit, dest_coordinates) -> bool:
 		_set_worker_construction(unit, false)
 	
 	_update_entity_vision(unit, source_tile)
+	_set_astar_routing(player_turn) #TODO Very lazy, should only update hidden/newly shown tiles
 	
 	return true
 
