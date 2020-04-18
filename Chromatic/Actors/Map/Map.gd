@@ -179,6 +179,8 @@ func _input(event: InputEvent) -> void:
 			_set_team_fog_of_war(1)
 		if event.scancode == KEY_2:
 			_set_team_fog_of_war(2)
+		if event.scancode == KEY_3:
+			_set_team_fog_of_war(-1)		
 
 
 func _generate_test_map():
@@ -312,29 +314,35 @@ func _update_entity_vision(entity: PlayerEntity, prev_tile: Tile = null):
 	if !entity:
 		return
 	
+	var old_tiles = []
 	#Decrement old tile vision count
 	if prev_tile:
 		var old_tile_coords = Tile.get_tiles_in_radius(prev_tile.coordinates, entity.vision_range)
-		var old_tiles = _get_tiles(old_tile_coords)
+		old_tiles = _get_tiles(old_tile_coords)
 		for tile in old_tiles:
 			tile.add_team_vision_count(entity.team, -1)
 	
 	#Increment new tile vision count
 	var visible_tile_coords = Tile.get_tiles_in_radius(entity.coordinates, entity.vision_range)
 	var visible_tiles = _get_tiles(visible_tile_coords)
-	for tile in visible_tiles:
+	var discovered_tiles = []
+	for tile in visible_tiles: 
+		#Collect newly discovered tiles to push info to player
+		if !old_tiles.has(tile) && tile.fog_of_war:
+			discovered_tiles.push_back(tile)
+			
 		tile.add_team_vision_count(entity.team, 1)
-
+	
+	players[entity.team].last_discovered_tiles = discovered_tiles
 
 func _set_team_fog_of_war(team: int) -> void:
+	if team == -1:
+		for tile_key in tile_lookup:
+			tile_lookup[tile_key].fog_of_war = false
+	
 	for tile_key in tile_lookup:
 		var tile = tile_lookup[tile_key]
 		tile.set_fog_of_war_for_team(team)
-#		tile.fog_of_war = true
-#
-#	for unit in units:
-#		if unit.team == team:
-#			_update_entity_vision(unit)
 	
 	
 func _get_path(from, to) -> PoolVector2Array:
@@ -352,7 +360,18 @@ func _traverse_to_path(unit, x, y) -> void:
 	var point_path = _get_path(unit.coordinates, Vector2(x, y))
 	
 	for point in point_path:
-		_try_place_unit(unit, point)
+		if !_try_place_unit(unit, point):
+			print("Failed to place unit while traversing path - cancelling traversal")
+			break;
+		
+		var has_discovered_unit = false
+		for discovered_tile in players[unit.team].last_discovered_tiles:
+			if discovered_tile.occupant && discovered_tile.occupant.team != unit.team:
+				has_discovered_unit = true
+		
+		if has_discovered_unit:
+			print("Enemy unit discovered on path - cancelling out of traversal early")
+			break
 	
 	_get_tile(unit.coordinates).show_yellow_filter()
 	_clear_tile_path()
