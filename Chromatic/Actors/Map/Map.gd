@@ -267,6 +267,7 @@ func _try_place_building(building, dest_coordinates: Vector2) -> bool:
 		destination_tile.building = building
 		building.coordinates = destination_tile.coordinates
 		building.position = destination_tile.position
+		_update_entity_vision(building)
 		
 		result = true
 	
@@ -340,6 +341,14 @@ func _update_entity_vision(entity: PlayerEntity, prev_tile: Tile = null):
 		tile.add_team_vision_count(entity.team, 1)
 	
 	players[entity.team].last_discovered_tiles = discovered_tiles
+
+
+func _clear_entity_vision(entity: Entity) -> void:
+	var visible_tile_coords = Tile.get_tiles_in_radius(entity.coordinates, entity.vision_range)
+	var visible_tiles = _get_tiles(visible_tile_coords)
+	for tile in visible_tiles:
+		tile.add_team_vision_count(entity.team, -1)
+
 
 func _set_team_fog_of_war(team: int) -> void:
 	if team == -1:
@@ -585,12 +594,7 @@ func _spawn_building(building_type: int, building_name: String, coordinates: Vec
 		print("Building must be placed in your territory")
 		return null
 		
-	var success = _try_place_building(building, coordinates)
-	
-	if !success:
-		print("Failed to place building at " + str(coordinates))
-		return null
-	
+		
 	var building_health_bar = building_health_bar_scene.instance()
 	building_health_bar.margin_left = -35
 	building_health_bar.margin_top = -20
@@ -609,6 +613,11 @@ func _spawn_building(building_type: int, building_name: String, coordinates: Vec
 	building.z_index = Z_INDEX.BUILDING
 	building.team = team
 	building.set_name(building_name)
+	
+	if !_try_place_building(building, coordinates):
+		print("Failed to place building at " + str(coordinates))
+		return null
+	
 	add_child(building)
 	buildings.push_front(building)
 	
