@@ -68,10 +68,10 @@ func _on_tile_clicked(coordinates : Vector2) -> void:
 func _on_tile_hovered(coordinates: Vector2) -> void:
 	pass
 		
-	if Input.is_mouse_button_pressed(BUTTON_RIGHT):
-		_clear_tile_path()
-		if selected_entity && selected_entity is Unit:
-			_map_path(selected_entity.coordinates, coordinates)
+#	if Input.is_mouse_button_pressed(BUTTON_RIGHT):
+#		_clear_tile_path()
+#		if selected_entity && selected_entity is Unit:
+#			_map_path(selected_entity.coordinates, coordinates)
 
 
 func _on_tile_right_clicked(coordinates: Vector2) -> void:
@@ -99,10 +99,14 @@ func _on_tile_right_mouse_released(coordinates: Vector2) -> void:
 			print("This unit cannot attack")
 			return
 		
+		if _try_spend_remaining_action_points(selected_entity):
+			print("Unit does not have any action points remaining to attack")
+		
 		var hostile_player_entity = tile.building if tile.has_hostile_building(player_turn) else tile.occupant
 		
 		var battle_result = _attack(selected_entity, hostile_player_entity)
 		_resolve_attack(selected_entity, hostile_player_entity, battle_result)
+		
 		return
 	
 	#No units or hostile buildings
@@ -164,7 +168,7 @@ func _ready() -> void:
 	_spawn_unit(Enums.UNIT_TYPE.ARCHER, "Archer", Vector2(7, 7), 1)
 	_spawn_unit(Enums.UNIT_TYPE.WARRIOR, "Warrior", Vector2(5,5 ), 2)
 	_spawn_unit(Enums.UNIT_TYPE.WORKER, "Worker", Vector2(3, 1), 2)
-	#_spawn_unit(Enums.UNIT_TYPE.SETTLER, "Settler", Vector2(1, 0), 2)
+	_spawn_unit(Enums.UNIT_TYPE.SETTLER, "Settler", Vector2(1, 0), 2)
 	
 	_spawn_resource_node(Enums.RESOURCE_TYPE.FOOD, "Food", Vector2(6, 1))
 	_spawn_resource_node(Enums.RESOURCE_TYPE.GOLD, "Gold", Vector2(8, 3))
@@ -738,7 +742,20 @@ func _set_astar_routing(team) -> void:
 			astar.set_point_disabled(tile.id, false)
 
 
+func _try_spend_remaining_action_points(unit: Unit) -> bool:
+	var result = false
+	
+	if unit.current_action_points > 0:
+		unit.current_action_points = 0
+		result = true
+		emit_signal("action_points_updated", unit.current_action_points, unit.max_action_points)
+	
+	return result
+
+
 func _cast_ability(ability: Ability, caster: PlayerEntity) -> void:
+	var successful = false
+	
 	match ability.type:
 		Enums.ABILITY_TYPES.CONSTRUCT_BUILDING:
 			var building_type = ability.data.building_type
@@ -754,17 +771,24 @@ func _cast_ability(ability: Ability, caster: PlayerEntity) -> void:
 			if building && building.construction_requires_worker:
 				var tile = _get_tile(caster.coordinates)
 				_set_worker_construction(tile.occupant, true)
+			
+			successful = true
 	
 		Enums.ABILITY_TYPES.RESUME_CONSTRUCTION:
 			_set_worker_construction(caster, !caster.is_constructing) #Toggle construction
+			successful = true
 	
 		Enums.ABILITY_TYPES.BUILD_UNIT:
 			var unit_type = ability.data.unit_type
 			var unit_name = ability.data.unit_name
 			var unit = _spawn_unit(unit_type, unit_name, caster.coordinates, caster.team)
+			successful = true
 		
 		_:
 			print("Ability type not recognised")
+		
+	if successful && caster is Unit:
+		_try_spend_remaining_action_points(caster)
 
 
 func _try_claim_tiles(tile_coordinates: Array, team: int):
@@ -791,7 +815,6 @@ func _attack(attacker: PlayerEntity, defender: PlayerEntity) -> int:
 		_deal_ranged_damage(attacker, defender)
 		if defender.attack_range >= distance:
 			_deal_ranged_damage(defender, attacker)
-			
 	elif !is_ranged_attack && distance == 1:
 		_deal_melee_damage(attacker, defender)
 		_deal_melee_damage(defender, attacker)
