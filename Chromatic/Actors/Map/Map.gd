@@ -99,8 +99,9 @@ func _on_tile_right_mouse_released(coordinates: Vector2) -> void:
 			print("This unit cannot attack")
 			return
 		
-		if _try_spend_remaining_action_points(selected_entity):
+		if !_try_spend_remaining_action_points(selected_entity):
 			print("Unit does not have any action points remaining to attack")
+			return
 		
 		var hostile_player_entity = tile.building if tile.has_hostile_building(player_turn) else tile.occupant
 		
