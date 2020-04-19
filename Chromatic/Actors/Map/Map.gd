@@ -57,6 +57,7 @@ signal entity_deselected
 signal new_player_turn
 signal new_game_turn
 signal resource_updated
+signal action_points_updated
 
 
 #Event Handlers
@@ -399,9 +400,16 @@ func _traverse_to_path(unit, x, y) -> void:
 	var point_path = _get_path(unit.coordinates, Vector2(x, y))
 	
 	for point in point_path:
+		if unit.current_action_points <= 0:
+			print("Unit has no more action points")
+			return
+		
 		if !_try_place_unit(unit, point):
 			print("Failed to place unit while traversing path - cancelling traversal")
 			break;
+		
+		unit.current_action_points -= 1
+		emit_signal("action_points_updated", unit.current_action_points, unit.max_action_points)
 		
 		var has_discovered_unit = false
 		for discovered_tile in players[unit.team].last_discovered_tiles:
@@ -716,6 +724,9 @@ func _resolve_game_turn() -> void:
 			if resource_node.remaining_charges <= 0:
 				print("Resource node mined out")
 				_despawn_entity(resource_node)
+	
+	for unit in units:
+		unit.current_action_points = unit.max_action_points
 
 
 func _set_astar_routing(team) -> void:
