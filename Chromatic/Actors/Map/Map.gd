@@ -257,8 +257,6 @@ func _get_tiles(tile_set_coordinates: PoolVector2Array) -> Array:
 
 
 func _try_place_building(building, dest_coordinates: Vector2) -> bool:
-	var result = false
-	
 	var source_tile = _get_tile(building.coordinates)
 	if source_tile:
 		print("Building already placed and cannot be moved!")
@@ -266,15 +264,16 @@ func _try_place_building(building, dest_coordinates: Vector2) -> bool:
 	
 	var destination_tile = _get_tile(dest_coordinates)
 	
-	if destination_tile && !destination_tile.building:
-		destination_tile.building = building
-		building.coordinates = destination_tile.coordinates
-		building.position = destination_tile.position
-		_update_entity_vision(building)
-		
-		result = true
+	if !destination_tile || destination_tile.building:
+		print("There is already a building there")
+		return false
 	
-	return result
+	destination_tile.building = building
+	building.coordinates = destination_tile.coordinates
+	building.position = destination_tile.position
+	_update_entity_vision(building)
+	
+	return true
 
 
 func _try_place_unit(unit, dest_coordinates) -> bool:
@@ -327,13 +326,17 @@ func _update_entity_vision(entity: PlayerEntity, prev_tile: Tile = null):
 	var old_tiles = []
 	#Decrement old tile vision count
 	if prev_tile:
-		var old_tile_coords = Tile.get_tiles_in_radius(prev_tile.coordinates, entity.vision_range)
+		var old_tile_coords = Tile.get_tiles_in_radius(prev_tile.coordinates, entity.current_vision_range)
 		old_tiles = _get_tiles(old_tile_coords)
 		for tile in old_tiles:
 			tile.add_team_vision_count(entity.team, -1)
 	
 	#Increment new tile vision count
-	var visible_tile_coords = Tile.get_tiles_in_radius(entity.coordinates, entity.vision_range)
+	var vision_range = entity.current_vision_range
+	if entity is Building && entity.under_construction:
+		vision_range = 0
+	
+	var visible_tile_coords = Tile.get_tiles_in_radius(entity.coordinates, vision_range)
 	var visible_tiles = _get_tiles(visible_tile_coords)
 	var discovered_tiles = []
 	for tile in visible_tiles: 
@@ -347,7 +350,7 @@ func _update_entity_vision(entity: PlayerEntity, prev_tile: Tile = null):
 
 
 func _clear_entity_vision(entity: Entity) -> void:
-	var visible_tile_coords = Tile.get_tiles_in_radius(entity.coordinates, entity.vision_range)
+	var visible_tile_coords = Tile.get_tiles_in_radius(entity.coordinates, entity.current_vision_range)
 	var visible_tiles = _get_tiles(visible_tile_coords)
 	for tile in visible_tiles:
 		tile.add_team_vision_count(entity.team, -1)
@@ -615,7 +618,6 @@ func _spawn_building(building_type: int, building_name: String, coordinates: Vec
 		print("Building must be placed in your territory")
 		return null
 		
-		
 	var building_health_bar = building_health_bar_scene.instance()
 	building_health_bar.margin_left = -35
 	building_health_bar.margin_top = -20
@@ -634,6 +636,7 @@ func _spawn_building(building_type: int, building_name: String, coordinates: Vec
 	building.z_index = Z_INDEX.BUILDING
 	building.team = team
 	building.set_name(building_name)
+	building.current_vision_range = building.max_vision_range
 	
 	if !_try_place_building(building, coordinates):
 		print("Failed to place building at " + str(coordinates))
@@ -664,7 +667,9 @@ func _despawn_entity(entity: Entity) -> void:
 	
 	if selected_entity == entity:
 		_deselect_entity()
-		
+	
+	_clear_entity_vision(entity)
+	
 	entity.queue_free()
 
 
@@ -677,7 +682,9 @@ func _resolve_game_turn() -> void:
 				building.build_time_remaining -= 1
 			
 			if building.build_time_remaining <= 0:
+				_clear_entity_vision(building)
 				building.under_construction = false
+				_update_entity_vision(building)
 				
 				if building_tile.has_constructing_worker():
 					_set_worker_construction(building_tile.occupant, false)
@@ -725,14 +732,17 @@ func _cast_ability(ability: Ability, caster: PlayerEntity) -> void:
 		Enums.ABILITY_TYPES.CONSTRUCT_BUILDING:
 			var building_type = ability.data.building_type
 			var building_name = ability.data.building_name
-			var building = _spawn_building(building_type, building_name, caster.coordinates, caster.team)
+			var coordinates = caster.coordinates
+			var team = caster.team
+			
+			if ability.data.building_type == Enums.BUILDING_TYPE.SETTLEMENT && caster is Settler:
+				_despawn_entity(caster)
+			
+			var building = _spawn_building(building_type, building_name, coordinates, team)
 			
 			if building && building.construction_requires_worker:
 				var tile = _get_tile(caster.coordinates)
 				_set_worker_construction(tile.occupant, true)
-				
-			if building is Settlement && caster is Settler:
-				_despawn_entity(caster)
 	
 		Enums.ABILITY_TYPES.RESUME_CONSTRUCTION:
 			_set_worker_construction(caster, !caster.is_constructing) #Toggle construction
