@@ -8,7 +8,7 @@
 script = ExtResource( 2 )
 max_health = 75
 melee_attack_damage = 20
-ranged_attack_damage = 40
+ranged_attack_damage = 150
 attack_range = 3
 can_attack = true
 

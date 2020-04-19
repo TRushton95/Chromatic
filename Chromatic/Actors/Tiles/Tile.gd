@@ -150,16 +150,14 @@ func add_team_vision_count(team: int, count: int):
 		return
 	
 	_team_vision_count_lookup[team] += count
-	
-	var fog = _team_vision_count_lookup[team] <= 0
-	fog_of_war_set(fog)
 
 
-func set_fog_of_war_for_team(team: int) -> void:
+func display_fog_of_war_for_team(team: int) -> void:
 	if !_team_vision_count_lookup.has(team):
 		return
 	
-	fog_of_war_set(!_team_vision_count_lookup[team])
+	var fog = _team_vision_count_lookup[team] <= 0
+	fog_of_war_set(fog)
 
 
 func has_hostile_unit(current_team: int) -> bool:

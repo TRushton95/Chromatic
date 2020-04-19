@@ -336,6 +336,8 @@ func _update_entity_vision(entity: PlayerEntity, prev_tile: Tile = null):
 		old_tiles = _get_tiles(old_tile_coords)
 		for tile in old_tiles:
 			tile.add_team_vision_count(entity.team, -1)
+			if entity.team == player_turn:
+				tile.display_fog_of_war_for_team(player_turn)
 	
 	#Increment new tile vision count
 	var vision_range = entity.current_vision_range
@@ -351,15 +353,19 @@ func _update_entity_vision(entity: PlayerEntity, prev_tile: Tile = null):
 			discovered_tiles.push_back(tile)
 			
 		tile.add_team_vision_count(entity.team, 1)
+		if entity.team == player_turn:
+				tile.display_fog_of_war_for_team(player_turn)
 	
 	players[entity.team].last_discovered_tiles = discovered_tiles
 
 
-func _clear_entity_vision(entity: Entity) -> void:
+func _clear_player_entity_vision(entity: PlayerEntity) -> void:
 	var visible_tile_coords = Tile.get_tiles_in_radius(entity.coordinates, entity.current_vision_range)
 	var visible_tiles = _get_tiles(visible_tile_coords)
 	for tile in visible_tiles:
 		tile.add_team_vision_count(entity.team, -1)
+		if entity.team == player_turn:
+				tile.display_fog_of_war_for_team(player_turn)
 
 
 func _set_team_fog_of_war(team: int) -> void:
@@ -369,7 +375,7 @@ func _set_team_fog_of_war(team: int) -> void:
 	
 	for tile_key in tile_lookup:
 		var tile = tile_lookup[tile_key]
-		tile.set_fog_of_war_for_team(team)
+		tile.display_fog_of_war_for_team(team)
 	
 	
 func _get_path(from, to) -> PoolVector2Array:
@@ -681,7 +687,8 @@ func _despawn_entity(entity: Entity) -> void:
 	if selected_entity == entity:
 		_deselect_entity()
 	
-	_clear_entity_vision(entity)
+	if !entity is ResourceNode:
+		_clear_player_entity_vision(entity)
 	
 	entity.queue_free()
 
@@ -695,7 +702,7 @@ func _resolve_game_turn() -> void:
 				building.build_time_remaining -= 1
 			
 			if building.build_time_remaining <= 0:
-				_clear_entity_vision(building)
+				_clear_player_entity_vision(building)
 				building.under_construction = false
 				_update_entity_vision(building)
 				
