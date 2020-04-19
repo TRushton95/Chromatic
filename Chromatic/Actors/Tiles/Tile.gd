@@ -8,6 +8,8 @@ var resource_node : ResourceNode
 var id : int
 var coordinates = Vector2(-1, -1)
 var claimed_by = -1 setget claimed_by_set
+var _team_vision_count_lookup : Dictionary
+var fog_of_war : bool setget fog_of_war_set
 
 #Signals
 signal tile_hovered
@@ -50,7 +52,38 @@ func claimed_by_set(value: int) -> void:
 		get_node("ClaimedMark/TextureRect").modulate = Lookups.TEAM_COLORS[value]
 
 
+#TODO this logic needs properly setting (whatever that means)
+func fog_of_war_set(value: bool) -> void:
+	fog_of_war = value
+	
+	if value:
+		get_node("Sprite").modulate = Color(0.5, 0.5, 0.5)
+		if occupant:
+			occupant.hide()
+		if building:
+			building.hide()
+		if resource_node:
+			resource_node.hide()
+			
+	else:
+		get_node("Sprite").modulate = Color(1, 1, 1)
+		if occupant:
+			occupant.show()
+		if building:
+			building.show()
+		if resource_node:
+			resource_node.show()
+
+
 #Methods
+func _ready() -> void:
+	#TEST
+	_team_vision_count_lookup = {
+		1: 0,
+		2: 0
+	}
+
+
 func has_building_under_construction() -> bool:
 	return building && building.under_construction
 
@@ -110,6 +143,23 @@ func pop_resources() -> Array:
 	resource_node.remaining_charges -= harvest
 	
 	return [resource_node.resource_type, harvest]
+
+
+func add_team_vision_count(team: int, count: int):
+	if !_team_vision_count_lookup.has(team):
+		return
+	
+	_team_vision_count_lookup[team] += count
+	
+	var fog = _team_vision_count_lookup[team] <= 0
+	fog_of_war_set(fog)
+
+
+func set_fog_of_war_for_team(team: int) -> void:
+	if !_team_vision_count_lookup.has(team):
+		return
+	
+	fog_of_war_set(!_team_vision_count_lookup[team])
 
 
 func has_hostile_unit(current_team: int) -> bool:

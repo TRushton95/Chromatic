@@ -5,6 +5,7 @@ var team : int
 var color: Color
 var food : int setget food_set
 var gold: int setget gold_set
+var last_discovered_tiles = []
 
 signal resource_updated
 

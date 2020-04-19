@@ -8,7 +8,7 @@ export var requires_territory = true
 export var construction_requires_worker = true
 export var build_time = 0
 var build_time_remaining: int setget build_time_remaining_set
-var under_construction: bool setget under_construction_set
+var under_construction = true setget under_construction_set
 
 
 #Setget
@@ -23,12 +23,13 @@ func under_construction_set(value: bool) -> void:
 	if under_construction:
 		show_construction_timer()
 	else:
+		current_vision_range = max_vision_range
 		hide_construction_timer()
 
 
 #Methods
 func _ready() -> void:
-	under_construction = true
+	current_vision_range = 0
 	build_time_remaining_set(build_time)
 
 
