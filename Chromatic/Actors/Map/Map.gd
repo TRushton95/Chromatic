@@ -232,7 +232,7 @@ func _connect_to_adjacent_tiles(tile):
 	for adj_tile_coords in tile.get_adjacent_tiles():
 		var adj_tile_key = _tile_name(adj_tile_coords)
 		
-		if (tile_lookup.has(adj_tile_key)):
+		if tile_lookup.has(adj_tile_key):
 			var adj_tile = tile_lookup[adj_tile_key]
 			astar.connect_points(tile.id, adj_tile.id)
 
