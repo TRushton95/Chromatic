@@ -73,10 +73,10 @@ margin_top = -29.0
 margin_right = 39.0
 margin_bottom = 29.0
 [connection signal="action_points_updated" from="Map" to="UI/UnitPortrait" method="_on_Map_action_points_updated"]
-[connection signal="entity_deselected" from="Map" to="UI/UnitPortrait" method="_on_Map_entity_deselected"]
 [connection signal="entity_deselected" from="Map" to="UI/AbilityBar" method="_on_Map_entity_deselected"]
-[connection signal="entity_selected" from="Map" to="UI/UnitPortrait" method="_on_Map_entity_selected"]
+[connection signal="entity_deselected" from="Map" to="UI/UnitPortrait" method="_on_Map_entity_deselected"]
 [connection signal="entity_selected" from="Map" to="UI/AbilityBar" method="_on_Map_entity_selected"]
+[connection signal="entity_selected" from="Map" to="UI/UnitPortrait" method="_on_Map_entity_selected"]
 [connection signal="multiple_entities_selected" from="Map" to="UI/EntitySelectionDropdown" method="_on_Map_multiple_entities_selected"]
 [connection signal="new_player_turn" from="Map" to="UI/ResourceBar" method="_on_Map_new_player_turn"]
 [connection signal="new_player_turn" from="Map" to="UI/PlayerTurn" method="_on_Map_new_player_turn"]

@@ -222,9 +222,12 @@ func set_astar_routing(team) -> void:
 #region Claiming
 
 func try_claim_tile(coordinates: Vector2, team: int) -> bool:
+	var tile = get_tile(coordinates)
+	if !tile:
+		return false
+	
 	var result = false
 	
-	var tile = get_tile(coordinates)
 	if tile.claimed_by == -1:
 		tile.claimed_by = team
 		result = true
