@@ -58,14 +58,16 @@ func _connect_to_adjacent_tiles(tile):
 
 
 func get_tile(coordinates: Vector2) -> Tile:
-	var result : Tile
-	
 	var tile_name = _tile_name(coordinates)
 	if !has_node(tile_name):
-		print ("No tile at " + str(coordinates))
+		return null
 	
-	result = get_node(tile_name)
+	var result = get_node(tile_name)
 	
+	if !result is Tile:
+		print("Attempted to get tile node that is not a tile")
+		return null
+		
 	return result
 
 
