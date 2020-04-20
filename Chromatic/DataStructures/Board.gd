@@ -212,7 +212,7 @@ func clear_tile_path() -> void:
 
 func set_astar_routing(team) -> void:
 	for tile in get_all_tiles():
-		if !tile.fog_of_war && tile.occupant && tile.occupant.team != team:
+		if !tile.fog_of_war && tile.occupant:
 			astar.set_point_disabled(tile.id, true)
 		else:
 			astar.set_point_disabled(tile.id, false)
