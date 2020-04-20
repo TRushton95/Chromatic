@@ -78,27 +78,31 @@ func _on_tile_right_clicked(coordinates: Vector2) -> void:
 func _on_tile_right_mouse_released(coordinates: Vector2) -> void:
 	if !selected_entity || !selected_entity is Unit:
 		return
+		
+	var selected_unit = selected_entity
 	
 	var tile = board.get_tile(coordinates)
 	
 	if tile.fog_of_war:
-		_traverse_to_path(selected_entity, coordinates.x, coordinates.y)
+		_traverse_to_path(selected_unit, coordinates.x, coordinates.y)
 		return
 	
 	#Hostile player entity
 	if tile.has_hostile_player_entity(player_turn):
-		if !selected_entity.can_attack:
+		if !selected_unit.can_attack:
 			print("This unit cannot attack")
 			return
 		
-		if !_try_spend_remaining_action_points(selected_entity):
-			print("Unit does not have any action points remaining to attack")
+		if selected_unit.current_action_points <= 0:
+			print("Unit has no remaining action points to attack")
 			return
 		
 		var hostile_player_entity = tile.building if tile.has_hostile_building(player_turn) else tile.occupant
 		
-		var battle_result = _attack(selected_entity, hostile_player_entity)
-		_resolve_attack(selected_entity, hostile_player_entity, battle_result)
+		var battle_result = _attack(selected_unit, hostile_player_entity)
+		if battle_result != BATTLE_RESULT.CANCELLED:
+			_resolve_attack(selected_unit, hostile_player_entity, battle_result)
+			_spend_remaining_action_points(selected_unit)
 		
 		return
 	
@@ -538,19 +542,17 @@ func _resolve_game_turn() -> void:
 		unit.current_action_points = unit.max_action_points
 
 
-func _try_spend_remaining_action_points(unit: Unit) -> bool:
-	var result = false
-	
-	if unit.current_action_points > 0:
-		unit.current_action_points = 0
-		result = true
-		emit_signal("action_points_updated", unit.current_action_points, unit.max_action_points)
-	
-	return result
+func _spend_remaining_action_points(unit: Unit):
+	unit.current_action_points = 0
+	emit_signal("action_points_updated", unit.current_action_points, unit.max_action_points)
 
 
 func _cast_ability(ability: Ability, caster: PlayerEntity) -> void:
 	var successful = false
+	
+	if caster is Unit && caster.current_action_points <= 0:
+		print("Unit has no remaining action points")
+		return
 	
 	match ability.type:
 		Enums.ABILITY_TYPES.CONSTRUCT_BUILDING:
@@ -588,7 +590,7 @@ func _cast_ability(ability: Ability, caster: PlayerEntity) -> void:
 			print("Ability type not recognised")
 		
 	if successful && caster is Unit:
-		_try_spend_remaining_action_points(caster)
+		_spend_remaining_action_points(caster)
 
 
 func _try_claim_tiles(tile_coordinates: Array, team: int):
@@ -611,11 +613,19 @@ func _attack(attacker: PlayerEntity, defender: PlayerEntity) -> int:
 	var distance = board.get_combat_path(attacker.coordinates, defender.coordinates).size()
 	var is_ranged_attack = attacker.attack_range > 0
 	
-	if is_ranged_attack && attacker.attack_range >= distance:
+	if is_ranged_attack:
+		if attacker.attack_range < distance:
+			print("Out of ranged attack range")
+			return BATTLE_RESULT.CANCELLED
+		
 		_deal_ranged_damage(attacker, defender)
-		if defender.attack_range >= distance:
+		if defender.attack_range >= distance: #ranged counter attack
 			_deal_ranged_damage(defender, attacker)
-	elif !is_ranged_attack && distance == 1:
+	else:
+		if distance > 1:
+			print("Out of melee attack range")
+			return BATTLE_RESULT.CANCELLED
+			
 		_deal_melee_damage(attacker, defender)
 		_deal_melee_damage(defender, attacker)
 
