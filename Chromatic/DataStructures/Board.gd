@@ -57,12 +57,14 @@ func _connect_to_adjacent_tiles(tile):
 			astar.connect_points(tile.id, adj_tile.id)
 
 
-func get_tile(coordinates: Vector2) -> Node:
-	var result = null
+func get_tile(coordinates: Vector2) -> Tile:
+	var result : Tile
 	
 	var tile_name = _tile_name(coordinates)
-	if has_node(tile_name):
-		result = get_node(tile_name)
+	if !has_node(tile_name):
+		print ("No tile at " + str(coordinates))
+	
+	result = get_node(tile_name)
 	
 	return result
 

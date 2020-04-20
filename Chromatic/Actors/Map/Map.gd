@@ -593,19 +593,9 @@ func _cast_ability(ability: Ability, caster: PlayerEntity) -> void:
 		_spend_remaining_action_points(caster)
 
 
-func _try_claim_tiles(tile_coordinates: Array, team: int):
-	var claimed_tiles = []
-	
-	for tile_coordinate in tile_coordinates:
-		var tile = board.get_tile(tile_coordinate)
-		
-		if !tile is Tile:
-			print("Attempted to claim item that is not a tile")
-			continue
-		
-		if tile.claimed_by == -1:
-			tile.claimed_by = team
-			claimed_tiles.push_back(tile)
+func _try_claim_tiles(coordinates: Array, team: int):
+	for tile in coordinates:
+		board.try_claim_tile(tile)
 
 
 #Returns an enum flag indicating who died in the battle
