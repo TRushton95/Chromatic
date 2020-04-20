@@ -108,7 +108,10 @@ func _on_tile_right_mouse_released(coordinates: Vector2) -> void:
 	
 	#No units or hostile buildings
 	if !tile.occupant && !tile.has_hostile_building(player_turn):
-		_traverse_to_path(selected_entity, coordinates.x, coordinates.y)
+		_traverse_to_path(selected_unit, coordinates.x, coordinates.y)
+		
+		if selected_unit is Worker && selected_unit.is_constructing:
+			_try_set_worker_construction(selected_unit, false)
 		return
 
 
@@ -261,7 +264,7 @@ func _end_turn() -> void:
 	emit_signal("new_player_turn", players[player_turn])
 
 
-func _set_worker_construction(worker: Worker, construct: bool):
+func _try_set_worker_construction(worker: Worker, construct: bool) -> bool:
 	if !construct:
 		worker.is_constructing = false
 		print("Worker is no longer constructing")
@@ -508,7 +511,7 @@ func _resolve_game_turn() -> void:
 				board.update_entity_vision_counters(building)
 				
 				if building_tile.has_constructing_worker():
-					_set_worker_construction(building_tile.occupant, false)
+					_try_set_worker_construction(building_tile.occupant, false)
 				
 				if building is Settlement:
 					var tiles_to_claim = Tile.get_tiles_in_radius(building.coordinates, 2)
@@ -572,12 +575,12 @@ func _cast_ability(ability: Ability, caster: PlayerEntity) -> void:
 			
 			if building && building.construction_requires_worker:
 				var tile = board.get_tile(caster.coordinates)
-				_set_worker_construction(tile.occupant, true)
+				_try_set_worker_construction(tile.occupant, true)
 			
 			successful = true
 	
 		Enums.ABILITY_TYPES.RESUME_CONSTRUCTION:
-			_set_worker_construction(caster, !caster.is_constructing) #Toggle construction
+			_try_set_worker_construction(caster, true) #Toggle construction
 			successful = true
 	
 		Enums.ABILITY_TYPES.BUILD_UNIT:
