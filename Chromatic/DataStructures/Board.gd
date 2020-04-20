@@ -11,10 +11,11 @@ const TILE_DIAMETER := 64
 var tile_lookup := {}
 var tile_path_highlight := []
 var astar := AStar2D.new()
+var last_discovered_tiles_for_team := {}
 
 
 #Methods
-func generate_test_map(rows: int, columns: int):
+func generate_test_map(columns: int, rows: int) -> void:
 	var id = 0
 	
 	for y in rows:
@@ -32,26 +33,22 @@ func generate_test_map(rows: int, columns: int):
 			if y % 2 == 0: # offset x every other row
 				tile.position += Vector2(TILE_DIAMETER / 2.0, 0)
 			
-			tile.connect("tile_clicked", self, "_on_tile_clicked")
-			tile.connect("tile_right_clicked", self, "_on_tile_right_clicked")
-			tile.connect("tile_hovered", self, "_on_tile_hovered")
-			tile.connect("tile_right_mouse_released", self, "_on_tile_right_mouse_released")
 			tile_lookup[_tile_name(Vector2(x, y))] = tile
 			add_child(tile)
 			
 			id += 1
 	
 	for tile in get_all_tiles():
-		connect_to_adjacent_tiles(tile)
+		_connect_to_adjacent_tiles(tile)
 
 
-#Region Tiles
+#region Tiles
 
 func _tile_name(coordinates: Vector2) -> String:
 	return "tile_" + str(coordinates.x) + "," + str(coordinates.y)
 
 
-func connect_to_adjacent_tiles(tile):
+func _connect_to_adjacent_tiles(tile):
 	for adj_tile_coords in tile.get_adjacent_tiles():
 		var adj_tile_key = _tile_name(adj_tile_coords)
 		
@@ -82,16 +79,16 @@ func get_tiles(tile_set_coordinates: PoolVector2Array) -> Array:
 
 
 func get_all_tiles() -> Array:
-	var result = {}
+	var result = []
 	
 	for tile_key in tile_lookup:
-		result.add(tile_lookup[tile_key])
+		result.push_back(tile_lookup[tile_key])
 	
 	return result
 
 #endregion
 
-#Region Entity
+#region Entity
 
 func try_place_unit(unit: Unit, dest_coordinates: Vector2) -> bool:
 	var destination_tile = get_tile(dest_coordinates)
@@ -103,6 +100,7 @@ func try_place_unit(unit: Unit, dest_coordinates: Vector2) -> bool:
 	destination_tile.occupant = unit
 	unit.coordinates = destination_tile.coordinates
 	unit.position = destination_tile.position
+	update_entity_vision_counters(unit, source_tile)
 	
 	if source_tile:
 		source_tile.occupant = null
@@ -125,6 +123,7 @@ func try_place_building(building, dest_coordinates: Vector2) -> bool:
 	destination_tile.building = building
 	building.coordinates = destination_tile.coordinates
 	building.position = destination_tile.position
+	update_entity_vision_counters(building, source_tile)
 	
 	return true
 
@@ -150,7 +149,7 @@ func try_place_resource_node(resource_node : ResourceNode, dest_coordinates: Vec
 
 #endregion
 
-#Region Highlighting
+#region Highlighting
 
 func highlight_tile_yellow(coordinates : Vector2):
 		get_tile(coordinates).show_yellow_filter()
@@ -161,7 +160,7 @@ func remove_highlight_tile_yellow(coordinates : Vector2):
 
 #endregion
 
-#Region Pathfinding
+#region Pathfinding
 
 func get_movement_path(from: Vector2, to: Vector2) -> PoolVector2Array:
 	var source_tile = get_tile(from)
@@ -216,7 +215,7 @@ func set_astar_routing(team) -> void:
 
 #endregion
 
-#Region Claiming
+#region Claiming
 
 func try_claim_tile(coordinates: Vector2, team: int) -> bool:
 	var result = false
@@ -225,6 +224,62 @@ func try_claim_tile(coordinates: Vector2, team: int) -> bool:
 	if tile.claimed_by == -1:
 		tile.claimed_by = team
 		result = true
+	
+	return result
+
+#endregion
+
+#region Fog Of War
+
+func refresh_fog_of_war_for_team(team: int) -> void:
+	for tile in get_all_tiles():
+		if team == -1:
+			tile.fog_of_war = false
+		else:
+			tile.display_fog_of_war_for_team(team)
+
+
+func clear_player_entity_vision(entity: PlayerEntity) -> void:
+	var visible_tile_coords = Tile.get_tiles_in_radius(entity.coordinates, entity.current_vision_range)
+	var visible_tiles = get_tiles(visible_tile_coords)
+	for tile in visible_tiles:
+		tile.add_team_vision_count(entity.team, -1)
+
+
+func update_entity_vision_counters(entity: PlayerEntity, prev_tile: Tile = null):
+	if !entity:
+		return
+	
+	#Decrement old tile vision count
+	var old_tiles = []
+	if prev_tile:
+		var old_tile_coords = Tile.get_tiles_in_radius(prev_tile.coordinates, entity.current_vision_range)
+		for old_tile in get_tiles(old_tile_coords):
+			old_tile.add_team_vision_count(entity.team, -1)
+	
+	#Increment new tile vision count
+	var vision_range = entity.current_vision_range
+	if entity is Building && entity.under_construction:
+		vision_range = 0
+	
+	var visible_tile_coords = Tile.get_tiles_in_radius(entity.coordinates, vision_range)
+	var visible_tiles = get_tiles(visible_tile_coords)
+	var discovered_tiles = []
+	for tile in visible_tiles: 
+		#Collect newly discovered tiles to push info to player
+		if !old_tiles.has(tile) && tile.fog_of_war:
+			discovered_tiles.push_back(tile)
+			
+		tile.add_team_vision_count(entity.team, 1)
+	
+	last_discovered_tiles_for_team[entity.team] = discovered_tiles
+
+
+func get_last_discovered_tiles_for_team(team: int) -> Array:
+	var result = []
+	
+	if last_discovered_tiles_for_team.has(team):
+		result = last_discovered_tiles_for_team[team]
 	
 	return result
 
