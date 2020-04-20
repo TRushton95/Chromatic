@@ -595,7 +595,7 @@ func _cast_ability(ability: Ability, caster: PlayerEntity) -> void:
 
 func _try_claim_tiles(coordinates: Array, team: int):
 	for tile in coordinates:
-		board.try_claim_tile(tile)
+		board.try_claim_tile(tile, team)
 
 
 #Returns an enum flag indicating who died in the battle
