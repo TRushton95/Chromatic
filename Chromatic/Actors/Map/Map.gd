@@ -56,7 +56,8 @@ signal action_points_updated
 
 #Event Handlers
 func _on_tile_clicked(coordinates : Vector2) -> void:
-	_select_entity_at_tile(coordinates)
+	if !board.get_tile(coordinates).fog_of_war:
+		_select_entity_at_tile(coordinates)
 
 
 func _on_tile_hovered(coordinates: Vector2) -> void:
