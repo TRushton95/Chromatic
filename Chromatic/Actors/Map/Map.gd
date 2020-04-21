@@ -266,10 +266,10 @@ func _end_turn() -> void:
 
 
 func _try_set_worker_construction(worker: Worker, construct: bool) -> bool:
-	if !construct:
+	if construct == false:
 		worker.is_constructing = false
 		print("Worker is no longer constructing")
-		return
+		return true
 	
 	var worker_tile = board.get_tile(worker.coordinates)
 	
@@ -581,8 +581,7 @@ func _cast_ability(ability: Ability, caster: PlayerEntity) -> void:
 			successful = true
 	
 		Enums.ABILITY_TYPES.RESUME_CONSTRUCTION:
-			_try_set_worker_construction(caster, true) #Toggle construction
-			successful = true
+			successful = _try_set_worker_construction(caster, true)
 	
 		Enums.ABILITY_TYPES.BUILD_UNIT:
 			var unit_type = ability.data.unit_type
