@@ -34,6 +34,7 @@ enum Z_INDEX { RESOURCE_NODE, BUILDING, UNIT }
 var rows = 8
 var columns = 10
 var selected_entity : Entity
+var selected_ability : Ability
 var board = Board.new()
 var game_turn = 1
 var player_turn = 1
@@ -61,10 +62,26 @@ func _on_tile_clicked(coordinates : Vector2) -> void:
 
 
 func _on_tile_hovered(coordinates: Vector2) -> void:
-	if Input.is_mouse_button_pressed(BUTTON_RIGHT):
-		board.clear_tile_path()
-		if selected_entity && selected_entity is Unit:
-			board.map_path(selected_entity.coordinates, coordinates)
+	var tile = board.get_tile(coordinates)
+	if selected_ability:
+		var valid = selected_ability.validate_target(tile, selected_entity)
+		var hover_filter_color = Color(0, 1, 0) if valid else Color(1, 0, 0)
+		tile.show_hover_filter(hover_filter_color)
+		
+		if Input.is_mouse_button_pressed(BUTTON_RIGHT):
+			board.clear_tile_path()
+			if selected_entity && selected_entity is Unit:
+				board.map_path(selected_entity.coordinates, coordinates)
+	else:
+		tile.show_hover_filter()
+
+
+func _on_tile_unhovered(coordinates: Vector2) -> void:
+	var tile = board.get_tile(coordinates)
+	if selected_ability:
+		pass
+	else:
+		tile.hide_hover_filter()
 
 
 func _on_tile_right_clicked(coordinates: Vector2) -> void:
@@ -129,22 +146,24 @@ func _on_AbilityBar_ability_pressed(index: int) -> void:
 	if !ability:
 		print("Ability index " + str(index) + " not found on entity")
 	
-	var player = players[player_turn]
-	if player.food < ability.food_cost:
-		print("Insufficient food")
-		return
-		
-	if player.gold < ability.gold_cost:
-		print("Insufficient gold")
-		return
+	selected_ability = ability
 	
-	player.food -= ability.food_cost
-	player.gold -= ability.gold_cost
-	
-	if ability.cast_time > 0:
-		selected_entity.queue_ability(index)
-	else:
-		_cast_ability(ability, selected_entity)
+#	var player = players[player_turn]
+#	if player.food < ability.food_cost:
+#		print("Insufficient food")
+#		return
+#
+#	if player.gold < ability.gold_cost:
+#		print("Insufficient gold")
+#		return
+#
+#	player.food -= ability.food_cost
+#	player.gold -= ability.gold_cost
+#
+#	if ability.cast_time > 0:
+#		selected_entity.queue_ability(index)
+#	else:
+#		_cast_ability(ability, selected_entity)
 
 
 func _on_EntitySelectionDropdown_option_selected(index: int) -> void:
@@ -171,6 +190,7 @@ func _ready() -> void:
 		tile.connect("tile_clicked", self, "_on_tile_clicked")
 		tile.connect("tile_right_clicked", self, "_on_tile_right_clicked")
 		tile.connect("tile_hovered", self, "_on_tile_hovered")
+		tile.connect("tile_unhovered", self, "_on_tile_unhovered")
 		tile.connect("tile_right_mouse_released", self, "_on_tile_right_mouse_released")
 	
 	_spawn_unit(Enums.UNIT_TYPE.SETTLER, "Settler", Vector2(0, 0), 1)
@@ -336,6 +356,7 @@ func _deselect_entity() -> void:
 	var selected_entity_tile = board.get_tile(selected_entity.coordinates)
 	selected_entity_tile.hide_yellow_filter()
 	selected_entity = null
+	selected_ability = null
 	emit_signal("entity_deselected")
 
 

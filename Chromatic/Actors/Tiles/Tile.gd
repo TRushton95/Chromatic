@@ -21,12 +21,10 @@ signal tile_right_mouse_released
 
 #Event Handlers
 func _on_Hitbox_mouse_entered() -> void:
-	get_node("HoverSprite").visible = true;
 	emit_signal("tile_hovered", coordinates)
 
 
 func _on_Hitbox_mouse_exited() -> void:
-	get_node("HoverSprite").visible = false;
 	emit_signal("tile_unhovered", coordinates)
 
 
@@ -193,12 +191,24 @@ func get_adjacent_tiles() -> PoolVector2Array:
 	return adj_tiles
 
 
-func show_red_filter():
-	get_node("RedFilter").visible = true
+func show_hover_filter(modulate = Color(1, 1, 1)):
+	var hover_sprite = get_node("HoverSprite")
+	hover_sprite.modulate = modulate
+	hover_sprite.visible = true;
 
 
-func hide_red_filter():
-	get_node("RedFilter").visible = false
+func hide_hover_filter():
+	var hover_sprite = get_node("HoverSprite")
+	hover_sprite.modulate = Color(1, 1, 1)
+	hover_sprite.visible = false;
+
+
+func show_green_filter():
+	get_node("GreenFilter").visible = true
+
+
+func hide_green_filter():
+	get_node("GreenFilter").visible = false
 
 
 func show_white_filter():

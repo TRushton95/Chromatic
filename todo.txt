@@ -1,0 +1,35 @@
+-------------------
+ Refactoring time
+-------------------
+
+Abilities into nodes
+
+In prepartion for forest civ, buildings need to be functionality identical to units
+	-Different in construction
+	-Don't show action points on buildings that can't move
+
+
+-------
+ Todo
+-------
+Signal names overlap - really bad, fix!!!
+
+Make so units cannot share tiles with buildings
+Friendly buildings and units CAN traverse through one another
+	-Workers construct/repair adjcent tiles
+
+Spawn unit on adjacent tile if building cannot spawn new unit
+
+Tile types
+
+
+---------
+ Bugs
+---------
+
+
+--------------
+ Investigate
+--------------
+Refactoring abilities into nodes with export vars
+Debug mode displaying more comprehensive UI
