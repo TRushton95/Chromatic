@@ -78,10 +78,7 @@ func _on_tile_hovered(coordinates: Vector2) -> void:
 
 func _on_tile_unhovered(coordinates: Vector2) -> void:
 	var tile = board.get_tile(coordinates)
-	if selected_ability:
-		pass
-	else:
-		tile.hide_hover_filter()
+	tile.hide_hover_filter()
 
 
 func _on_tile_right_clicked(coordinates: Vector2) -> void:
