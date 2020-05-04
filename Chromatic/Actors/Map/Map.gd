@@ -68,13 +68,12 @@ func _on_tile_hovered(coordinates: Vector2) -> void:
 		var valid = selected_ability.validate_target(tile, selected_entity, path.size())
 		var hover_filter_color = Color(0, 1, 0) if valid else Color(1, 0, 0)
 		tile.show_hover_filter(hover_filter_color)
-		
+	else:
+		tile.show_hover_filter()
 		if Input.is_mouse_button_pressed(BUTTON_RIGHT):
 			board.clear_tile_path()
 			if selected_entity && selected_entity is Unit:
 				board.map_path(selected_entity.coordinates, coordinates)
-	else:
-		tile.show_hover_filter()
 
 
 func _on_tile_unhovered(coordinates: Vector2) -> void:
