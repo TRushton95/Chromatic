@@ -64,7 +64,8 @@ func _on_tile_clicked(coordinates : Vector2) -> void:
 func _on_tile_hovered(coordinates: Vector2) -> void:
 	var tile = board.get_tile(coordinates)
 	if selected_ability:
-		var valid = selected_ability.validate_target(tile, selected_entity)
+		var path = board.get_combat_path(coordinates, selected_entity.coordinates)
+		var valid = selected_ability.validate_target(tile, selected_entity, path.size())
 		var hover_filter_color = Color(0, 1, 0) if valid else Color(1, 0, 0)
 		tile.show_hover_filter(hover_filter_color)
 		
@@ -370,7 +371,7 @@ func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: 
 			unit.abilities.push_back(AbilityFactory.get_construct_outpost_ability())
 			unit.abilities.push_back(AbilityFactory.get_construct_hunting_camp_ability())
 			unit.abilities.push_back(AbilityFactory.get_construct_mining_camp_ability())
-			unit.abilities.push_back(AbilityFactory.get_resume_construction_ability())
+			#unit.abilities.push_back(AbilityFactory.get_resume_construction_ability())
 			
 		Enums.UNIT_TYPE.WARRIOR:
 			unit = warrior_scene.instance()
