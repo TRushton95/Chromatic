@@ -87,6 +87,9 @@ func _on_tile_right_clicked(coordinates: Vector2) -> void:
 	if !dest_tile.fog_of_war && dest_tile.occupant:
 		return
 	
+	if selected_ability:
+		return
+	
 	if selected_entity && selected_entity is Unit:
 		board.map_path(selected_entity.coordinates, coordinates)
 
@@ -94,11 +97,15 @@ func _on_tile_right_clicked(coordinates: Vector2) -> void:
 func _on_tile_right_mouse_released(coordinates: Vector2) -> void:
 	if !selected_entity || !selected_entity is Unit:
 		return
-		
-	var selected_unit = selected_entity
 	
 	var tile = board.get_tile(coordinates)
 	
+	if selected_ability:
+		_deselect_ability()
+		tile.show_hover_filter()
+		return
+		
+	var selected_unit = selected_entity
 	if tile.fog_of_war:
 		_traverse_to_path(selected_unit, coordinates.x, coordinates.y)
 		return
@@ -144,7 +151,7 @@ func _on_AbilityBar_ability_pressed(index: int) -> void:
 	if !ability:
 		print("Ability index " + str(index) + " not found on entity")
 	
-	selected_ability = ability
+	_select_ability(ability)
 	
 #	var player = players[player_turn]
 #	if player.food < ability.food_cost:
@@ -337,7 +344,7 @@ func _select_entity_at_tile(coordinates: Vector2) -> void:
 	emit_signal("multiple_entities_selected", tile.occupant, tile.building, tile.resource_node)
 
 
-func _select_entity(entity: Entity):
+func _select_entity(entity: Entity) -> void:
 	if selected_entity:
 		board.get_tile(selected_entity.coordinates).hide_yellow_filter()
 		
@@ -354,8 +361,24 @@ func _deselect_entity() -> void:
 	var selected_entity_tile = board.get_tile(selected_entity.coordinates)
 	selected_entity_tile.hide_yellow_filter()
 	selected_entity = null
-	selected_ability = null
+	_deselect_ability()
 	emit_signal("entity_deselected")
+
+
+func _select_ability(ability: Ability) -> void:
+	if !ability:
+		return
+	
+	#re-validate tile and set filter
+	selected_ability = ability
+
+
+func _deselect_ability() -> void:
+	if !selected_ability:
+		return
+	
+	#change hovered tile filter to white
+	selected_ability = null
 
 
 func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: int) -> Unit:
