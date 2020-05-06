@@ -150,7 +150,11 @@ func _on_AbilityBar_ability_pressed(index: int) -> void:
 	if !ability:
 		print("Ability index " + str(index) + " not found on entity")
 	
-	_select_ability(ability)
+	if ability.cast_range == 0:
+		var target_tile = board.get_tile(selected_entity.coordinates)
+		_cast_ability(ability, target_tile, selected_entity)
+	else:
+		_select_ability(ability)
 	
 #	var player = players[player_turn]
 #	if player.food < ability.food_cost:
@@ -563,7 +567,8 @@ func _resolve_game_turn() -> void:
 		#Resolve queued abilities
 		var ability = building.ability_queue_next()
 		if ability:
-			_cast_ability(ability, building)
+			var building_tile = board.get_tile(building.coordinates)
+			_cast_ability(ability, building_tile, building)
 				
 	for resource_node in resource_nodes:
 		var tile = board.get_tile(resource_node.coordinates)
@@ -592,8 +597,14 @@ func _spend_remaining_action_points(unit: Unit):
 	emit_signal("action_points_updated", unit.current_action_points, unit.max_action_points)
 
 
-func _cast_ability(ability: Ability, caster: PlayerEntity) -> void:
+func _cast_ability(ability: Ability, target_tile: Tile, caster: PlayerEntity) -> void:
 	var successful = false
+	
+	var cast_distance = board.get_combat_path(target_tile.coordinates, caster.coordinates).size()
+	var valid = ability.validate_target(target_tile, caster, cast_distance)
+	if !valid:
+		print("Cannot cast that there")
+		return
 	
 	if caster is Unit && caster.current_action_points <= 0:
 		print("Unit has no remaining action points")
@@ -603,7 +614,7 @@ func _cast_ability(ability: Ability, caster: PlayerEntity) -> void:
 		Enums.ABILITY_TYPES.CONSTRUCT_BUILDING:
 			var building_type = ability.data.building_type
 			var building_name = ability.data.building_name
-			var coordinates = caster.coordinates
+			var coordinates = target_tile.coordinates
 			var team = caster.team
 			
 			if ability.data.building_type == Enums.BUILDING_TYPE.SETTLEMENT && caster is Settler:
