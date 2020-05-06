@@ -57,7 +57,13 @@ signal action_points_updated
 
 #Event Handlers
 func _on_tile_clicked(coordinates : Vector2) -> void:
-	if !board.get_tile(coordinates).fog_of_war:
+	var tile = board.get_tile(coordinates)
+	
+	if selected_ability:
+		_cast_ability(selected_ability, tile, selected_entity)
+		return
+	
+	if !tile.fog_of_war:
 		_select_entity_at_tile(coordinates)
 
 
@@ -82,11 +88,11 @@ func _on_tile_unhovered(coordinates: Vector2) -> void:
 
 
 func _on_tile_right_clicked(coordinates: Vector2) -> void:
-	var dest_tile = board.get_tile(coordinates)
-	if !dest_tile.fog_of_war && dest_tile.occupant:
+	if selected_ability:
 		return
 	
-	if selected_ability:
+	var dest_tile = board.get_tile(coordinates)
+	if !dest_tile.fog_of_war && dest_tile.occupant:
 		return
 	
 	if selected_entity && selected_entity is Unit:
