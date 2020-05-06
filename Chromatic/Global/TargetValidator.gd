@@ -16,9 +16,11 @@ func validate(target_tile: Tile, caster: PlayerEntity, target_requirements: Arra
 				meets_requirement = _validate_gold(target_tile, caster)
 			Enums.REQUIREMENTS.FOOD:
 				meets_requirement = _validate_food(target_tile, caster)
+			Enums.REQUIREMENTS.NO_BUILDING:
+				meets_requirement = !_validate_building(target_tile, caster)
 		
 		if !meets_requirement:
-			print("Failed to meet targeting requirement " + str(requirement))
+			print("Failed to meet targeting requirement: " + str(Enums.REQUIREMENTS.keys()[requirement]))
 			return false
 				
 	return true
