@@ -19,7 +19,7 @@ static func get_construct_outpost_ability() -> Ability:
 		"building_type": Enums.BUILDING_TYPE.OUTPOST,
 		"building_name": "Outpost"
 	}
-	var target_reqs = [Enums.REQUIREMENTS.UNOCCUPIED]
+	var target_reqs = [Enums.REQUIREMENTS.UNOCCUPIED, Enums.REQUIREMENTS.TERRITORY]
 	return Ability.new(Enums.ABILITY_TYPES.CONSTRUCT_BUILDING, construct_outpost_data, 1, target_reqs, construct_outpost_icon)
 
 
@@ -29,7 +29,7 @@ static func get_construct_hunting_camp_ability() -> Ability:
 		"building_type": Enums.BUILDING_TYPE.HUNTING_CAMP,
 		"building_name": "HuntingCamp"
 	}
-	var target_reqs = [Enums.REQUIREMENTS.UNOCCUPIED, Enums.REQUIREMENTS.FOOD]
+	var target_reqs = [Enums.REQUIREMENTS.UNOCCUPIED, Enums.REQUIREMENTS.FOOD, Enums.REQUIREMENTS.TERRITORY]
 	return Ability.new(Enums.ABILITY_TYPES.CONSTRUCT_BUILDING, construct_hunting_camp_data, 1, target_reqs, construct_hunting_camp_icon)
 
 
@@ -39,7 +39,7 @@ static func get_construct_mining_camp_ability() -> Ability:
 		"building_type": Enums.BUILDING_TYPE.MINING_CAMP,
 		"building_name": "MiningCamp"
 	}
-	var target_reqs = [Enums.REQUIREMENTS.UNOCCUPIED, Enums.REQUIREMENTS.GOLD]
+	var target_reqs = [Enums.REQUIREMENTS.UNOCCUPIED, Enums.REQUIREMENTS.GOLD, Enums.REQUIREMENTS.TERRITORY]
 	return Ability.new(Enums.ABILITY_TYPES.CONSTRUCT_BUILDING, construct_mining_camp_data, 1, target_reqs, construct_mining_camp_icon)
 
 #Building Abilities

@@ -16,6 +16,8 @@ func validate(target_tile: Tile, caster: PlayerEntity, target_requirements: Arra
 				meets_requirement = _validate_gold(target_tile, caster)
 			Enums.REQUIREMENTS.FOOD:
 				meets_requirement = _validate_food(target_tile, caster)
+			Enums.REQUIREMENTS.TERRITORY:
+				meets_requirement = _validate_territory(target_tile, caster)
 			Enums.REQUIREMENTS.NO_BUILDING:
 				meets_requirement = !_validate_building(target_tile, caster)
 		
@@ -67,6 +69,11 @@ func _validate_gold(target_tile: Tile, caster: PlayerEntity) -> bool:
 		return true
 	
 	return false
+
+
+func _validate_territory(target_tile: Tile, caster: PlayerEntity) -> bool:
+	return target_tile.claimed_by == caster.team
+
 
 # NEEDS TO BE DONE AFTER UNIT/BUILDING REFACTOR INTO ONE ENTITY
 #func _validate_player_entity(target_tile: Tile, caster: PlayerEntity, alliance = Enums.ALLIANCE.NA) -> bool:
