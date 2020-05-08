@@ -9,6 +9,7 @@ export var construction_requires_worker = true
 export var build_time = 0
 var build_time_remaining: int setget build_time_remaining_set
 var under_construction = true setget under_construction_set
+var constructing_worker_id : String
 
 
 #Setget

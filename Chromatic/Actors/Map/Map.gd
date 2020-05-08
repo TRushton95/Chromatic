@@ -34,6 +34,7 @@ enum Z_INDEX { RESOURCE_NODE, BUILDING, UNIT }
 var rows = 8
 var columns = 10
 var selected_entity : Entity
+var selected_ability : Ability
 var board = Board.new()
 var game_turn = 1
 var player_turn = 1
@@ -56,18 +57,40 @@ signal action_points_updated
 
 #Event Handlers
 func _on_tile_clicked(coordinates : Vector2) -> void:
-	if !board.get_tile(coordinates).fog_of_war:
+	var tile = board.get_tile(coordinates)
+	
+	if selected_ability:
+		_cast_ability(selected_ability, tile, selected_entity)
+		return
+	
+	if !tile.fog_of_war:
 		_select_entity_at_tile(coordinates)
 
 
 func _on_tile_hovered(coordinates: Vector2) -> void:
-	if Input.is_mouse_button_pressed(BUTTON_RIGHT):
-		board.clear_tile_path()
-		if selected_entity && selected_entity is Unit:
-			board.map_path(selected_entity.coordinates, coordinates)
+	var tile = board.get_tile(coordinates)
+	if selected_ability:
+		var path = board.get_combat_path(coordinates, selected_entity.coordinates)
+		var valid = selected_ability.validate_target(tile, selected_entity, path.size())
+		var hover_filter_color = Color(0, 1, 0) if valid else Color(1, 0, 0)
+		tile.show_hover_filter(hover_filter_color)
+	else:
+		tile.show_hover_filter()
+		if Input.is_mouse_button_pressed(BUTTON_RIGHT):
+			board.clear_tile_path()
+			if selected_entity && selected_entity is Unit:
+				board.map_path(selected_entity.coordinates, coordinates)
+
+
+func _on_tile_unhovered(coordinates: Vector2) -> void:
+	var tile = board.get_tile(coordinates)
+	tile.hide_hover_filter()
 
 
 func _on_tile_right_clicked(coordinates: Vector2) -> void:
+	if selected_ability:
+		return
+	
 	var dest_tile = board.get_tile(coordinates)
 	if !dest_tile.fog_of_war && dest_tile.occupant:
 		return
@@ -79,11 +102,15 @@ func _on_tile_right_clicked(coordinates: Vector2) -> void:
 func _on_tile_right_mouse_released(coordinates: Vector2) -> void:
 	if !selected_entity || !selected_entity is Unit:
 		return
-		
-	var selected_unit = selected_entity
 	
 	var tile = board.get_tile(coordinates)
 	
+	if selected_ability:
+		_deselect_ability()
+		tile.show_hover_filter()
+		return
+		
+	var selected_unit = selected_entity
 	if tile.fog_of_war:
 		_traverse_to_path(selected_unit, coordinates.x, coordinates.y)
 		return
@@ -111,8 +138,8 @@ func _on_tile_right_mouse_released(coordinates: Vector2) -> void:
 	if !tile.occupant && !tile.has_hostile_building(player_turn):
 		_traverse_to_path(selected_unit, coordinates.x, coordinates.y)
 		
-		if selected_unit is Worker && selected_unit.is_constructing:
-			_try_set_worker_construction(selected_unit, false)
+		if selected_unit is Worker && selected_unit.constructing_building:
+			_stop_worker_construction(selected_unit)
 		return
 
 
@@ -129,22 +156,28 @@ func _on_AbilityBar_ability_pressed(index: int) -> void:
 	if !ability:
 		print("Ability index " + str(index) + " not found on entity")
 	
-	var player = players[player_turn]
-	if player.food < ability.food_cost:
-		print("Insufficient food")
-		return
-		
-	if player.gold < ability.gold_cost:
-		print("Insufficient gold")
-		return
-	
-	player.food -= ability.food_cost
-	player.gold -= ability.gold_cost
-	
-	if ability.cast_time > 0:
-		selected_entity.queue_ability(index)
+	if ability.cast_range == 0:
+		var target_tile = board.get_tile(selected_entity.coordinates)
+		_cast_ability(ability, target_tile, selected_entity)
 	else:
-		_cast_ability(ability, selected_entity)
+		_select_ability(ability)
+	
+#	var player = players[player_turn]
+#	if player.food < ability.food_cost:
+#		print("Insufficient food")
+#		return
+#
+#	if player.gold < ability.gold_cost:
+#		print("Insufficient gold")
+#		return
+#
+#	player.food -= ability.food_cost
+#	player.gold -= ability.gold_cost
+#
+#	if ability.cast_time > 0:
+#		selected_entity.queue_ability(index)
+#	else:
+#		_cast_ability(ability, selected_entity)
 
 
 func _on_EntitySelectionDropdown_option_selected(index: int) -> void:
@@ -171,6 +204,7 @@ func _ready() -> void:
 		tile.connect("tile_clicked", self, "_on_tile_clicked")
 		tile.connect("tile_right_clicked", self, "_on_tile_right_clicked")
 		tile.connect("tile_hovered", self, "_on_tile_hovered")
+		tile.connect("tile_unhovered", self, "_on_tile_unhovered")
 		tile.connect("tile_right_mouse_released", self, "_on_tile_right_mouse_released")
 	
 	_spawn_unit(Enums.UNIT_TYPE.SETTLER, "Settler", Vector2(0, 0), 1)
@@ -265,30 +299,21 @@ func _end_turn() -> void:
 	emit_signal("new_player_turn", players[player_turn])
 
 
-func _try_set_worker_construction(worker: Worker, construct: bool) -> bool:
-	if construct == false:
-		worker.is_constructing = false
-		print("Worker is no longer constructing")
-		return true
+func _start_worker_construction(worker: Worker, building: Building) -> void:
+	if !worker || !building:
+		print("Did not provide worker or building when starting construction")
+		return
 	
-	var worker_tile = board.get_tile(worker.coordinates)
+	if worker.constructing_building:
+		_stop_worker_construction(worker)
 	
-	if !worker_tile:
-		return false
-	
-	if worker_tile.building == null:
-		print("No building to construct")
-		return false
-	
-	if !worker_tile.building.under_construction || !worker_tile.building.construction_requires_worker:
-		print("Cannot construct that building")
-		return false
-	
-	else:
-		worker.is_constructing = true
-		print("Worker now constructing")
-	
-	return true
+	worker.constructing_building = building
+	building.constructing_worker_id = worker.name #TODO Use a unique id here
+
+
+func _stop_worker_construction(worker: Worker) -> void:
+	worker.constructing_building.constructing_worker_id = ""
+	worker.constructing_building = null
 
 
 func _select_entity_at_tile(coordinates: Vector2) -> void:
@@ -319,7 +344,7 @@ func _select_entity_at_tile(coordinates: Vector2) -> void:
 	emit_signal("multiple_entities_selected", tile.occupant, tile.building, tile.resource_node)
 
 
-func _select_entity(entity: Entity):
+func _select_entity(entity: Entity) -> void:
 	if selected_entity:
 		board.get_tile(selected_entity.coordinates).hide_yellow_filter()
 		
@@ -336,7 +361,24 @@ func _deselect_entity() -> void:
 	var selected_entity_tile = board.get_tile(selected_entity.coordinates)
 	selected_entity_tile.hide_yellow_filter()
 	selected_entity = null
+	_deselect_ability()
 	emit_signal("entity_deselected")
+
+
+func _select_ability(ability: Ability) -> void:
+	if !ability:
+		return
+	
+	#re-validate tile and set filter
+	selected_ability = ability
+
+
+func _deselect_ability() -> void:
+	if !selected_ability:
+		return
+	
+	#change hovered tile filter to white
+	selected_ability = null
 
 
 func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: int) -> Unit:
@@ -502,8 +544,8 @@ func _resolve_game_turn() -> void:
 	for building in buildings:
 		#Resolve construction
 		if building.under_construction:
-			var building_tile = board.get_tile(building.coordinates)
-			if !building.construction_requires_worker || building_tile.has_constructing_worker():
+			var constructing_worker = get_node(building.constructing_worker_id)
+			if !building.construction_requires_worker || constructing_worker:
 				building.build_time_remaining -= 1
 			
 			if building.build_time_remaining <= 0:
@@ -511,8 +553,8 @@ func _resolve_game_turn() -> void:
 				building.under_construction = false
 				board.update_entity_vision_counters(building)
 				
-				if building_tile.has_constructing_worker():
-					_try_set_worker_construction(building_tile.occupant, false)
+				if constructing_worker:
+					_stop_worker_construction(constructing_worker)
 				
 				if building is Settlement:
 					var tiles_to_claim = Tile.get_tiles_in_radius(building.coordinates, 2)
@@ -522,7 +564,8 @@ func _resolve_game_turn() -> void:
 		#Resolve queued abilities
 		var ability = building.ability_queue_next()
 		if ability:
-			_cast_ability(ability, building)
+			var building_tile = board.get_tile(building.coordinates)
+			_cast_ability(ability, building_tile, building)
 				
 	for resource_node in resource_nodes:
 		var tile = board.get_tile(resource_node.coordinates)
@@ -551,8 +594,14 @@ func _spend_remaining_action_points(unit: Unit):
 	emit_signal("action_points_updated", unit.current_action_points, unit.max_action_points)
 
 
-func _cast_ability(ability: Ability, caster: PlayerEntity) -> void:
+func _cast_ability(ability: Ability, target_tile: Tile, caster: PlayerEntity) -> void:
 	var successful = false
+	
+	var cast_distance = board.get_combat_path(target_tile.coordinates, caster.coordinates).size()
+	var valid = ability.validate_target(target_tile, caster, cast_distance)
+	if !valid:
+		print("Cannot cast that there")
+		return
 	
 	if caster is Unit && caster.current_action_points <= 0:
 		print("Unit has no remaining action points")
@@ -562,7 +611,7 @@ func _cast_ability(ability: Ability, caster: PlayerEntity) -> void:
 		Enums.ABILITY_TYPES.CONSTRUCT_BUILDING:
 			var building_type = ability.data.building_type
 			var building_name = ability.data.building_name
-			var coordinates = caster.coordinates
+			var coordinates = target_tile.coordinates
 			var team = caster.team
 			
 			if ability.data.building_type == Enums.BUILDING_TYPE.SETTLEMENT && caster is Settler:
@@ -576,12 +625,12 @@ func _cast_ability(ability: Ability, caster: PlayerEntity) -> void:
 			
 			if building && building.construction_requires_worker:
 				var tile = board.get_tile(caster.coordinates)
-				_try_set_worker_construction(tile.occupant, true)
+				_start_worker_construction(tile.occupant, building)
 			
 			successful = true
 	
 		Enums.ABILITY_TYPES.RESUME_CONSTRUCTION:
-			successful = _try_set_worker_construction(caster, true)
+			successful = _start_worker_construction(caster, target_tile.building)
 	
 		Enums.ABILITY_TYPES.BUILD_UNIT:
 			var unit_type = ability.data.unit_type
