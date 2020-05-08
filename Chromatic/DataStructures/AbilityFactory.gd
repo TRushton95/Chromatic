@@ -19,7 +19,7 @@ static func get_construct_outpost_ability() -> Ability:
 		"building_type": Enums.BUILDING_TYPE.OUTPOST,
 		"building_name": "Outpost"
 	}
-	var target_reqs = [Enums.REQUIREMENTS.UNOCCUPIED, Enums.REQUIREMENTS.TERRITORY]
+	var target_reqs = [Enums.REQUIREMENTS.UNOCCUPIED]
 	return Ability.new(Enums.ABILITY_TYPES.CONSTRUCT_BUILDING, construct_outpost_data, 1, target_reqs, construct_outpost_icon)
 
 
@@ -41,6 +41,12 @@ static func get_construct_mining_camp_ability() -> Ability:
 	}
 	var target_reqs = [Enums.REQUIREMENTS.UNOCCUPIED, Enums.REQUIREMENTS.GOLD, Enums.REQUIREMENTS.TERRITORY]
 	return Ability.new(Enums.ABILITY_TYPES.CONSTRUCT_BUILDING, construct_mining_camp_data, 1, target_reqs, construct_mining_camp_icon)
+
+
+static func get_resume_construction_ability() -> Ability:
+	var resume_construction_icon = load("res://Assets/AbilityIcons/ResumeConstruction.png")
+	var target_reqs = [Enums.REQUIREMENTS.BUILDING_UNDER_CONSTRUCTION]
+	return Ability.new(Enums.ABILITY_TYPES.RESUME_CONSTRUCTION, {}, 1, target_reqs, resume_construction_icon)
 
 #Building Abilities
 static func get_build_settler_ability() -> Ability:

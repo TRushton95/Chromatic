@@ -1,4 +1,4 @@
 extends Unit
 class_name Worker
 
-var is_constructing = false
+var constructing_building : Building

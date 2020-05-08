@@ -138,8 +138,8 @@ func _on_tile_right_mouse_released(coordinates: Vector2) -> void:
 	if !tile.occupant && !tile.has_hostile_building(player_turn):
 		_traverse_to_path(selected_unit, coordinates.x, coordinates.y)
 		
-		if selected_unit is Worker && selected_unit.is_constructing:
-			_try_set_worker_construction(selected_unit, false)
+		if selected_unit is Worker && selected_unit.constructing_building:
+			_stop_worker_construction(selected_unit)
 		return
 
 
@@ -299,30 +299,21 @@ func _end_turn() -> void:
 	emit_signal("new_player_turn", players[player_turn])
 
 
-func _try_set_worker_construction(worker: Worker, construct: bool) -> bool:
-	if construct == false:
-		worker.is_constructing = false
-		print("Worker is no longer constructing")
-		return true
+func _start_worker_construction(worker: Worker, building: Building) -> void:
+	if !worker || !building:
+		print("Did not provide worker or building when starting construction")
+		return
 	
-	var worker_tile = board.get_tile(worker.coordinates)
+	if worker.constructing_building:
+		_stop_worker_construction(worker)
 	
-	if !worker_tile:
-		return false
-	
-	if worker_tile.building == null:
-		print("No building to construct")
-		return false
-	
-	if !worker_tile.building.under_construction || !worker_tile.building.construction_requires_worker:
-		print("Cannot construct that building")
-		return false
-	
-	else:
-		worker.is_constructing = true
-		print("Worker now constructing")
-	
-	return true
+	worker.constructing_building = building
+	building.constructing_worker_id = worker.name #TODO Use a unique id here
+
+
+func _stop_worker_construction(worker: Worker) -> void:
+	worker.constructing_building.constructing_worker_id = ""
+	worker.constructing_building = null
 
 
 func _select_entity_at_tile(coordinates: Vector2) -> void:
@@ -403,7 +394,7 @@ func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: 
 			unit.abilities.push_back(AbilityFactory.get_construct_outpost_ability())
 			unit.abilities.push_back(AbilityFactory.get_construct_hunting_camp_ability())
 			unit.abilities.push_back(AbilityFactory.get_construct_mining_camp_ability())
-			#unit.abilities.push_back(AbilityFactory.get_resume_construction_ability())
+			unit.abilities.push_back(AbilityFactory.get_resume_construction_ability())
 			
 		Enums.UNIT_TYPE.WARRIOR:
 			unit = warrior_scene.instance()
@@ -553,8 +544,8 @@ func _resolve_game_turn() -> void:
 	for building in buildings:
 		#Resolve construction
 		if building.under_construction:
-			var building_tile = board.get_tile(building.coordinates)
-			if !building.construction_requires_worker || building_tile.has_constructing_worker():
+			var constructing_worker = get_node(building.constructing_worker_id)
+			if !building.construction_requires_worker || constructing_worker:
 				building.build_time_remaining -= 1
 			
 			if building.build_time_remaining <= 0:
@@ -562,8 +553,8 @@ func _resolve_game_turn() -> void:
 				building.under_construction = false
 				board.update_entity_vision_counters(building)
 				
-				if building_tile.has_constructing_worker():
-					_try_set_worker_construction(building_tile.occupant, false)
+				if constructing_worker:
+					_stop_worker_construction(constructing_worker)
 				
 				if building is Settlement:
 					var tiles_to_claim = Tile.get_tiles_in_radius(building.coordinates, 2)
@@ -634,12 +625,12 @@ func _cast_ability(ability: Ability, target_tile: Tile, caster: PlayerEntity) ->
 			
 			if building && building.construction_requires_worker:
 				var tile = board.get_tile(caster.coordinates)
-				_try_set_worker_construction(tile.occupant, true)
+				_start_worker_construction(tile.occupant, building)
 			
 			successful = true
 	
 		Enums.ABILITY_TYPES.RESUME_CONSTRUCTION:
-			successful = _try_set_worker_construction(caster, true)
+			successful = _start_worker_construction(caster, target_tile.building)
 	
 		Enums.ABILITY_TYPES.BUILD_UNIT:
 			var unit_type = ability.data.unit_type

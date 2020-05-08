@@ -82,14 +82,6 @@ func _ready() -> void:
 	}
 
 
-func has_building_under_construction() -> bool:
-	return building && building.under_construction
-
-
-func has_constructing_worker() -> bool:
-	return occupant && occupant is Worker && occupant.is_constructing
-
-
 func is_resource_developed() -> bool:
 	if !building || building.under_construction:
 		return false

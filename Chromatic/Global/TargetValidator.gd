@@ -12,6 +12,8 @@ func validate(target_tile: Tile, caster: PlayerEntity, target_requirements: Arra
 				meets_requirement = _validate_unit(target_tile, caster)
 			Enums.REQUIREMENTS.BUILDING:
 				meets_requirement = _validate_building(target_tile, caster)
+			Enums.REQUIREMENTS.BUILDING_UNDER_CONSTRUCTION:
+				meets_requirement = _validate_building_under_construction(target_tile, caster)
 			Enums.REQUIREMENTS.GOLD:
 				meets_requirement = _validate_gold(target_tile, caster)
 			Enums.REQUIREMENTS.FOOD:
@@ -50,6 +52,17 @@ func _validate_building(target_tile: Tile, caster: PlayerEntity) -> bool:
 	
 	var target_building = target_tile.building
 	if target_building && target_building is Building:
+		result = true
+	
+	return result
+
+
+func _validate_building_under_construction(target_tile: Tile, caster: PlayerEntity) -> bool:
+	
+	var result = false
+	
+	var target_building = target_tile.building
+	if target_building && target_building is Building && target_building.under_construction:
 		result = true
 	
 	return result
