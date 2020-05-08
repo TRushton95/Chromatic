@@ -544,7 +544,10 @@ func _resolve_game_turn() -> void:
 	for building in buildings:
 		#Resolve construction
 		if building.under_construction:
-			var constructing_worker = get_node(building.constructing_worker_id)
+			var constructing_worker
+			if has_node(building.constructing_worker_id):
+				constructing_worker = get_node(building.constructing_worker_id)
+			
 			if !building.construction_requires_worker || constructing_worker:
 				building.build_time_remaining -= 1
 			
