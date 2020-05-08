@@ -641,8 +641,12 @@ func _cast_ability(ability: Ability, target_tile: Tile, caster: PlayerEntity) ->
 		_:
 			print("Ability type not recognised")
 		
-	if successful && caster is Unit:
-		_spend_remaining_action_points(caster)
+	if successful:
+		if ability == selected_ability:
+			_deselect_ability()
+		
+		if caster is Unit:
+			_spend_remaining_action_points(caster)
 
 
 func _try_claim_tiles(coordinates: Array, team: int):
