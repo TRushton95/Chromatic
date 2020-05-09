@@ -9,7 +9,7 @@ static func get_construct_settlement_ability() -> Ability:
 		"building_type": Enums.BUILDING_TYPE.SETTLEMENT,
 		"building_name": "Settlement"
 	}
-	var target_reqs = [Enums.REQUIREMENTS.NO_BUILDING]
+	var target_reqs = [Enums.REQUIREMENTS.SETTLER]
 	return Ability.new(Enums.ABILITY_TYPES.CONSTRUCT_BUILDING, data, 0, target_reqs, construct_settlement_icon)
 			
 

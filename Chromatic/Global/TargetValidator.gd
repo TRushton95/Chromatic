@@ -20,8 +20,8 @@ func validate(target_tile: Tile, caster: PlayerEntity, target_requirements: Arra
 				meets_requirement = _validate_food(target_tile, caster)
 			Enums.REQUIREMENTS.TERRITORY:
 				meets_requirement = _validate_territory(target_tile, caster)
-			Enums.REQUIREMENTS.NO_BUILDING:
-				meets_requirement = !_validate_building(target_tile, caster)
+			Enums.REQUIREMENTS.SETTLER:
+				meets_requirement = _validate_settler(target_tile, caster)
 		
 		if !meets_requirement:
 			print("Failed to meet targeting requirement: " + str(Enums.REQUIREMENTS.keys()[requirement]))
@@ -31,7 +31,7 @@ func validate(target_tile: Tile, caster: PlayerEntity, target_requirements: Arra
 
 
 func _validate_unoccupied_tile(target_tile: Tile, caster: PlayerEntity) -> bool:
-	if target_tile.occupant == null && target_tile.building == null:
+	if target_tile.occupant == null:
 		return true
 	
 	return false
@@ -50,8 +50,7 @@ func _validate_unit(target_tile: Tile, caster: PlayerEntity) -> bool:
 func _validate_building(target_tile: Tile, caster: PlayerEntity) -> bool:
 	var result = false
 	
-	var target_building = target_tile.building
-	if target_building && target_building is Building:
+	if target_tile.occupant && target_tile.occupant is Building:
 		result = true
 	
 	return result
@@ -61,8 +60,7 @@ func _validate_building_under_construction(target_tile: Tile, caster: PlayerEnti
 	
 	var result = false
 	
-	var target_building = target_tile.building
-	if target_building && target_building is Building && target_building.under_construction:
+	if target_tile.occupant && target_tile.occupant is Building && target_tile.occupant.under_construction:
 		result = true
 	
 	return result
@@ -86,6 +84,10 @@ func _validate_gold(target_tile: Tile, caster: PlayerEntity) -> bool:
 
 func _validate_territory(target_tile: Tile, caster: PlayerEntity) -> bool:
 	return target_tile.claimed_by == caster.team
+
+
+func _validate_settler(target_tile: Tile, caster: PlayerEntity) -> bool:
+	return target_tile.occupant && target_tile.occupant is Settler
 
 
 # NEEDS TO BE DONE AFTER UNIT/BUILDING REFACTOR INTO ONE ENTITY

@@ -110,36 +110,35 @@ func _on_tile_right_mouse_released(coordinates: Vector2) -> void:
 		tile.show_hover_filter()
 		return
 		
-	var selected_unit = selected_entity
 	if tile.fog_of_war:
-		_traverse_to_path(selected_unit, coordinates.x, coordinates.y)
+		_traverse_to_path(selected_entity, coordinates)
 		return
 	
 	#Hostile player entity
 	if tile.has_hostile_player_entity(player_turn):
-		if !selected_unit.can_attack:
+		if !selected_entity.can_attack:
 			print("This unit cannot attack")
 			return
 		
-		if selected_unit.current_action_points <= 0:
+		if selected_entity.current_action_points <= 0:
 			print("Unit has no remaining action points to attack")
 			return
 		
-		var hostile_player_entity = tile.building if tile.has_hostile_building(player_turn) else tile.occupant
+		var hostile_player_entity = tile.occupant
 		
-		var battle_result = _attack(selected_unit, hostile_player_entity)
+		var battle_result = _attack(selected_entity, hostile_player_entity)
 		if battle_result != BATTLE_RESULT.CANCELLED:
-			_resolve_attack(selected_unit, hostile_player_entity, battle_result)
-			_spend_remaining_action_points(selected_unit)
+			_resolve_attack(selected_entity, hostile_player_entity, battle_result)
+			_spend_remaining_action_points(selected_entity)
 		
 		return
 	
 	#No units or hostile buildings
-	if !tile.occupant && !tile.has_hostile_building(player_turn):
-		_traverse_to_path(selected_unit, coordinates.x, coordinates.y)
+	if !tile.occupant:
+		_traverse_to_path(selected_entity, coordinates)
 		
-		if selected_unit is Worker && selected_unit.constructing_building:
-			_stop_worker_construction(selected_unit)
+		if selected_entity is Worker && selected_entity.constructing_building:
+			_stop_worker_construction(selected_entity)
 		return
 
 
@@ -190,7 +189,6 @@ func _on_Player_resource_update(resource_type: int, value: int) -> void:
 
 #Methods
 func _ready() -> void:
-	#TODO - food test code
 	for i in range(0, number_of_players):
 		var team = i + 1
 		var player = Player.new(team, Lookups.TEAM_COLORS[team], STARTING_FOOD, STARTING_GOLD)
@@ -250,27 +248,27 @@ func _get_tiles(tile_set_coordinates: PoolVector2Array) -> Array:
 	return result
 
 
-func _traverse_to_path(unit, x, y) -> void:
-	board.get_tile(unit.coordinates).hide_yellow_filter()
-	var point_path = board.get_movement_path(unit.coordinates, Vector2(x, y))
+func _traverse_to_path(player_entity: PlayerEntity, destination: Vector2) -> void:
+	board.get_tile(player_entity.coordinates).hide_yellow_filter()
+	var point_path = board.get_movement_path(player_entity.coordinates, destination)
 	
 	var i = 0
 	for point in point_path:
-		if unit.current_action_points <= 0:
+		if player_entity.current_action_points <= 0:
 			print("Unit has no more action points")
 			return
 		
-		if !board.try_place_unit(unit, point):
+		if !board.try_place_player_entity(player_entity, point):
 			print("Failed to place unit while traversing path - cancelling traversal")
 			break;
 		
 		board.refresh_fog_of_war_for_team(player_turn)
-		unit.current_action_points -= 1
-		emit_signal("action_points_updated", unit.current_action_points, unit.max_action_points)
+		player_entity.current_action_points -= 1
+		emit_signal("action_points_updated", player_entity.current_action_points, player_entity.max_action_points)
 		
 		var has_discovered_unit = false
-		for discovered_tile in board.get_last_discovered_tiles_for_team(unit.team):
-			if discovered_tile.occupant && discovered_tile.occupant.team != unit.team:
+		for discovered_tile in board.get_last_discovered_tiles_for_team(player_entity.team):
+			if discovered_tile.occupant && discovered_tile.occupant.team != player_entity.team:
 				has_discovered_unit = true
 		
 		if has_discovered_unit:
@@ -282,8 +280,9 @@ func _traverse_to_path(unit, x, y) -> void:
 		
 		i += 1
 	
-	board.get_tile(unit.coordinates).show_yellow_filter()
+	board.get_tile(player_entity.coordinates).show_yellow_filter()
 	board.clear_tile_path()
+	board.set_astar_routing(player_turn)
 
 
 func _end_turn() -> void:
@@ -325,8 +324,6 @@ func _select_entity_at_tile(coordinates: Vector2) -> void:
 	var tile_entities = []
 	if tile.occupant && tile.occupant.team == player_turn:
 		tile_entities.push_front(tile.occupant)
-	if tile.building && tile.building.team == player_turn:
-		tile_entities.push_front(tile.building)
 	if tile.resource_node:
 		tile_entities.push_front(tile.resource_node)
 		
@@ -340,8 +337,8 @@ func _select_entity_at_tile(coordinates: Vector2) -> void:
 		return
 	
 	print("Multiple entities available to select")
-	multiple_entity_selection_storage = [ tile.occupant, tile.building, tile.resource_node ]
-	emit_signal("multiple_entities_selected", tile.occupant, tile.building, tile.resource_node)
+	multiple_entity_selection_storage = [ tile.occupant, tile.resource_node ]
+	emit_signal("multiple_entities_selected", tile.occupant, tile.resource_node)
 
 
 func _select_entity(entity: Entity) -> void:
@@ -404,12 +401,13 @@ func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: 
 		_:
 			print("Cannot locate unit type " + str(unit_type) + " to spawn")
 			return null
+	
 	unit.team = team
 	unit.z_index = Z_INDEX.UNIT
 	unit.set_name(unit_name)
 	add_child(unit)
 	
-	var success = board.try_place_unit(unit, coordinates)
+	var success = board.try_place_player_entity(unit, coordinates)
 	
 	if !success:
 		print("Failed to place unit at " + str(coordinates))
@@ -417,6 +415,7 @@ func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: 
 		return null
 	
 	board.refresh_fog_of_war_for_team(player_turn)
+	board.set_astar_routing(player_turn)
 	units.push_front(unit)
 	
 	return unit
@@ -424,8 +423,8 @@ func _spawn_unit(unit_type: int, unit_name: String, coordinates: Vector2, team: 
 
 func _spawn_building(building_type: int, building_name: String, coordinates: Vector2, team: int) -> Building:
 	var dest_tile = board.get_tile(coordinates)
-	if dest_tile.building:
-		print("Cannot build on tile " + str(dest_tile.coordinates) + ". A building already exists there!")
+	if dest_tile.occupant:
+		print("Cannot build on tile " + str(dest_tile.coordinates) + ". It is already occupied.")
 		return null
 	
 	var building
@@ -476,7 +475,7 @@ func _spawn_building(building_type: int, building_name: String, coordinates: Vec
 	building.set_name(building_name)
 	building.current_vision_range = building.max_vision_range
 	
-	if !board.try_place_building(building, coordinates):
+	if !board.try_place_player_entity(building, coordinates):
 		print("Failed to place building at " + str(coordinates))
 		return null
 	
@@ -484,6 +483,7 @@ func _spawn_building(building_type: int, building_name: String, coordinates: Vec
 	buildings.push_front(building)
 	board.update_entity_vision_counters(building)
 	board.refresh_fog_of_war_for_team(player_turn)
+	board.set_astar_routing(player_turn)
 	
 	return building
 
@@ -520,11 +520,9 @@ func _despawn_entity(entity: Entity) -> void:
 	if entity is Unit:
 		occupying_tile.occupant = null
 		units.erase(entity)
-		if entity.team != player_turn:
-			board.set_astar_routing(player_turn)
 	
 	if entity is Building:
-		occupying_tile.building = null	
+		occupying_tile.occupant = null	
 		buildings.erase(entity)
 	
 	if entity is ResourceNode:
@@ -538,6 +536,7 @@ func _despawn_entity(entity: Entity) -> void:
 		board.clear_player_entity_vision(entity)
 	
 	entity.queue_free()
+	board.set_astar_routing(player_turn)
 
 
 func _resolve_game_turn() -> void:
@@ -633,7 +632,8 @@ func _cast_ability(ability: Ability, target_tile: Tile, caster: PlayerEntity) ->
 			successful = true
 	
 		Enums.ABILITY_TYPES.RESUME_CONSTRUCTION:
-			successful = _start_worker_construction(caster, target_tile.building)
+			if target_tile.occupant is Building:
+				successful = _start_worker_construction(caster, target_tile.occupant)
 	
 		Enums.ABILITY_TYPES.BUILD_UNIT:
 			var unit_type = ability.data.unit_type
@@ -710,7 +710,7 @@ func _resolve_attack(attacker: PlayerEntity, defender: PlayerEntity, battle_resu
 		var defender_tile = board.get_tile(defender.coordinates)
 		_despawn_entity(defender)
 		if attacker.attack_range == 0:
-			_traverse_to_path(attacker, defender_tile.coordinates.x, defender_tile.coordinates.y)
+			_traverse_to_path(attacker, defender_tile.coordinates)
 	
 	if battle_result == BATTLE_RESULT.BOTH_DIED:
 		_despawn_entity(attacker)

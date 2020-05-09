@@ -2,8 +2,7 @@ extends Node2D
 class_name Tile
 
 #Fields
-var occupant : Unit
-var building : Building
+var occupant : PlayerEntity
 var resource_node : ResourceNode
 var id : int
 var coordinates = Vector2(-1, -1)
@@ -58,8 +57,6 @@ func fog_of_war_set(value: bool) -> void:
 		get_node("Sprite").modulate = Color(0.5, 0.5, 0.5)
 		if occupant:
 			occupant.hide()
-		if building:
-			building.hide()
 		if resource_node:
 			resource_node.hide()
 			
@@ -67,8 +64,6 @@ func fog_of_war_set(value: bool) -> void:
 		get_node("Sprite").modulate = Color(1, 1, 1)
 		if occupant:
 			occupant.show()
-		if building:
-			building.show()
 		if resource_node:
 			resource_node.show()
 
@@ -83,14 +78,14 @@ func _ready() -> void:
 
 
 func is_resource_developed() -> bool:
-	if !building || building.under_construction:
+	if !occupant || !occupant is Building || occupant.under_construction:
 		return false
 	
 	var result = false
 	
-	if resource_node is Food and building is HuntingCamp:
+	if resource_node is Food and occupant is HuntingCamp:
 		result = true
-	elif resource_node is Gold and building is MiningCamp:
+	elif resource_node is Gold and occupant is MiningCamp:
 		result = true
 	
 	return result
@@ -104,7 +99,7 @@ func is_harvesting() -> bool:
 	if resource_node.basic && claimed_by >= 0:
 		return true
 	
-	if !building || building.under_construction:
+	if !occupant || !occupant is Building || occupant.under_construction:
 		return false
 	
 	#Claiming developed resources
@@ -151,11 +146,11 @@ func display_fog_of_war_for_team(team: int) -> void:
 
 
 func has_hostile_unit(current_team: int) -> bool:
-	return occupant && occupant.team != current_team
+	return occupant && occupant.team != current_team && occupant is Unit
 
 
 func has_hostile_building(current_team: int) -> bool:
-	return building && building.team != current_team
+	return occupant && occupant.team != current_team && occupant is Building
 
 
 func has_hostile_player_entity(current_team: int) -> bool:
@@ -163,11 +158,11 @@ func has_hostile_player_entity(current_team: int) -> bool:
 
 
 func has_friendly_unit(current_team: int) -> bool:
-	return occupant && occupant.team == current_team
+	return occupant && occupant.team == current_team && occupant is Unit
 
 
 func has_friendly_building(current_team: int) -> bool:
-	return building && building.team == current_team
+	return occupant && occupant.team == current_team && occupant is Unit
 
 
 func get_adjacent_tiles() -> PoolVector2Array:

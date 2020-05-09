@@ -15,19 +15,14 @@ func _on_UnitOption_pressed() -> void:
 	emit_signal("option_selected", 0)
 
 
-func _on_BuildingOption_pressed() -> void:
-	visible = false
-	emit_signal("option_selected", 1)
-
-
 func _on_ResourceNodeOption_pressed() -> void:
 	visible = false
 	emit_signal("option_selected", 2)
 
 
 #Event Handlers
-func _on_Map_multiple_entities_selected(unit: Unit, building: Building, resource_node: ResourceNode) -> void:
-	_set_options(unit, building, resource_node)
+func _on_Map_multiple_entities_selected(player_entity: PlayerEntity, resource_node: ResourceNode) -> void:
+	_set_options(player_entity, resource_node)
 	_refresh_control()
 	rect_global_position = get_viewport().get_mouse_position()
 	visible = true
@@ -43,9 +38,8 @@ func _input(event: InputEvent) -> void:
 			visible = false
 
 
-func _set_options(unit: Unit, building: Building, resource_node: ResourceNode) -> void:
-	_set_option(unit, unit_option)
-	_set_option(building, building_option)
+func _set_options(player_entity: PlayerEntity, resource_node: ResourceNode) -> void:
+	_set_option(player_entity, unit_option)
 	_set_option(resource_node, resource_node_option)
 
 

@@ -94,40 +94,21 @@ func get_all_tiles() -> Array:
 
 #region Entity
 
-func try_place_unit(unit: Unit, dest_coordinates: Vector2) -> bool:
+func try_place_player_entity(player_entity: PlayerEntity, dest_coordinates: Vector2) -> bool:
 	var destination_tile = get_tile(dest_coordinates)
-	var source_tile = get_tile(unit.coordinates)
+	var source_tile = get_tile(player_entity.coordinates)
 	
 	if !destination_tile || destination_tile.occupant:
+		print("Cannot place player entity on that tile")
 		return false
 	
-	destination_tile.occupant = unit
-	unit.coordinates = destination_tile.coordinates
-	unit.position = destination_tile.position
-	update_entity_vision_counters(unit, source_tile)
+	destination_tile.occupant = player_entity
+	player_entity.coordinates = destination_tile.coordinates
+	player_entity.position = destination_tile.position
+	update_entity_vision_counters(player_entity, source_tile)
 	
 	if source_tile:
 		source_tile.occupant = null
-	
-	return true
-
-
-func try_place_building(building, dest_coordinates: Vector2) -> bool:
-	var source_tile = get_tile(building.coordinates)
-	if source_tile:
-		print("Building already placed and cannot be moved!")
-		return false
-	
-	var destination_tile = get_tile(dest_coordinates)
-	
-	if !destination_tile || destination_tile.building:
-		print("There is already a building there")
-		return false
-	
-	destination_tile.building = building
-	building.coordinates = destination_tile.coordinates
-	building.position = destination_tile.position
-	update_entity_vision_counters(building, source_tile)
 	
 	return true
 
@@ -137,7 +118,7 @@ func try_place_resource_node(resource_node : ResourceNode, dest_coordinates: Vec
 	
 	var source_tile = get_tile(resource_node.coordinates)
 	if source_tile:
-		print("Resource node already placed and cannot be moved!")
+		print("Resource node already placed and cannot be moved")
 		return false
 	
 	var destination_tile = get_tile(dest_coordinates)
@@ -171,6 +152,10 @@ func get_movement_path(from: Vector2, to: Vector2) -> PoolVector2Array:
 	var destination_tile = get_tile(to)
 	
 	var result = astar.get_point_path(source_tile.id, destination_tile.id)
+	if !result:
+		print("No available path to point " + str(to))
+		return result
+	
 	result.remove(0) #Remove source tile frrm path
 	
 	return result
