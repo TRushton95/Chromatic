@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=2]
+[gd_scene load_steps=10 format=2]
 
 [ext_resource path="res://Actors/Map/Map.tscn" type="PackedScene" id=1]
 [ext_resource path="res://UI/ResourceBar/ResourceBar.tscn" type="PackedScene" id=2]
@@ -8,6 +8,7 @@
 [ext_resource path="res://UI/PlayerTurn/PlayerTurn.tscn" type="PackedScene" id=6]
 [ext_resource path="res://UI/PlayerTurn/PlayerTurn.gd" type="Script" id=7]
 [ext_resource path="res://UI/EntitySelectionDropdown/EntitySelectionDropdown.tscn" type="PackedScene" id=8]
+[ext_resource path="res://UI/NewTurnMessage/NewTurnMessage.tscn" type="PackedScene" id=9]
 
 [node name="Game" type="Node"]
 
@@ -72,14 +73,18 @@ margin_left = -39.0
 margin_top = -29.0
 margin_right = 39.0
 margin_bottom = 29.0
+
+[node name="NewTurnMessage" parent="UI" instance=ExtResource( 9 )]
+visible = false
 [connection signal="action_points_updated" from="Map" to="UI/UnitPortrait" method="_on_Map_action_points_updated"]
 [connection signal="entity_deselected" from="Map" to="UI/UnitPortrait" method="_on_Map_entity_deselected"]
 [connection signal="entity_deselected" from="Map" to="UI/AbilityBar" method="_on_Map_entity_deselected"]
 [connection signal="entity_selected" from="Map" to="UI/UnitPortrait" method="_on_Map_entity_selected"]
 [connection signal="entity_selected" from="Map" to="UI/AbilityBar" method="_on_Map_entity_selected"]
 [connection signal="multiple_entities_selected" from="Map" to="UI/EntitySelectionDropdown" method="_on_Map_multiple_entities_selected"]
-[connection signal="new_player_turn" from="Map" to="UI/PlayerTurn" method="_on_Map_new_player_turn"]
 [connection signal="new_player_turn" from="Map" to="UI/ResourceBar" method="_on_Map_new_player_turn"]
+[connection signal="new_player_turn" from="Map" to="UI/PlayerTurn" method="_on_Map_new_player_turn"]
+[connection signal="new_player_turn" from="Map" to="UI/NewTurnMessage" method="_on_Map_new_player_turn"]
 [connection signal="resource_updated" from="Map" to="UI/ResourceBar" method="_on_Map_resource_updated"]
 [connection signal="pressed" from="UI/EndTurnButton" to="Map" method="_on_EndTurnButton_pressed"]
 [connection signal="ability_pressed" from="UI/AbilityBar" to="Map" method="_on_AbilityBar_ability_pressed"]

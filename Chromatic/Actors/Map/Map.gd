@@ -31,6 +31,7 @@ enum BATTLE_RESULT { CANCELLED, NONE_DIED, ATTACKER_DIED, DEFENDER_DIED, BOTH_DI
 enum Z_INDEX { RESOURCE_NODE, BUILDING, UNIT }
 
 #Fields
+
 var rows = 8
 var columns = 10
 var selected_entity : Entity
@@ -540,6 +541,8 @@ func _despawn_entity(entity: Entity) -> void:
 
 
 func _resolve_game_turn() -> void:
+	#anim_player.play("DisplayNewTurnMessage")
+	
 	for building in buildings:
 		#Resolve construction
 		if building.under_construction:
