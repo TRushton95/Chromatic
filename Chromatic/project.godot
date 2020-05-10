@@ -89,6 +89,11 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://Actors/ResourceNodes/ResourceNode.gd"
 }, {
+"base": "Unit",
+"class": "Sapling",
+"language": "GDScript",
+"path": "res://Actors/Units/Forest/Sapling/Sapling.gd"
+}, {
 "base": "Building",
 "class": "Settlement",
 "language": "GDScript",
@@ -136,6 +141,7 @@ _global_script_class_icons={
 "Player": "",
 "PlayerEntity": "",
 "ResourceNode": "",
+"Sapling": "",
 "Settlement": "",
 "Settler": "",
 "Tile": "",

@@ -1,0 +1,40 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://Assets/Units/Forest/Sapling/sapling_idle.png" type="Texture" id=1]
+[ext_resource path="res://Actors/Units/Forest/Sapling/Sapling.gd" type="Script" id=2]
+[ext_resource path="res://UI/HealthBars/UnitHealthBar/HealthBar.tscn" type="PackedScene" id=3]
+
+[sub_resource type="Animation" id=1]
+resource_name = "Idle"
+length = 2.0
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite:frame_coords")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ Vector2( 0, 0 ), Vector2( 1, 0 ) ]
+}
+
+[node name="Sapling" type="Node2D"]
+script = ExtResource( 2 )
+
+[node name="HealthBar" parent="." instance=ExtResource( 3 )]
+visible = false
+margin_left = -16.0
+margin_top = -32.0
+margin_right = -16.0
+margin_bottom = -32.0
+
+[node name="Sprite" type="Sprite" parent="."]
+texture = ExtResource( 1 )
+hframes = 2
+frame = 1
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+anims/Idle = SubResource( 1 )

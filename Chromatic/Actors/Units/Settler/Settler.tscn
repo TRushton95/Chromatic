@@ -7,7 +7,6 @@
 [node name="Settler" type="Node2D"]
 script = ExtResource( 2 )
 max_health = 50
-vision_range = 1
 
 [node name="HealthBar" parent="." instance=ExtResource( 3 )]
 margin_left = -16.0
