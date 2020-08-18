@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=2]
 
-[ext_resource path="res://Assets/Tiles/GroundTile.png" type="Texture" id=1]
+[ext_resource path="res://Assets/Tiles/EmptyTile_128x96.png" type="Texture" id=1]
 [ext_resource path="res://Assets/Tiles/TileHover.png" type="Texture" id=2]
 [ext_resource path="res://Actors/Tiles/Tile.gd" type="Script" id=3]
 [ext_resource path="res://Assets/Tiles/WhiteTileFilter.png" type="Texture" id=4]
@@ -40,7 +40,7 @@ texture = ExtResource( 6 )
 modulate = Color( 0.235294, 1, 0.603922, 1 )
 position = Vector2( -0.237144, 0.15778 )
 scale = Vector2( 0.999642, 1 )
-polygon = PoolVector2Array( -30.3444, -15.404, 0.13649, -30.8664, 30.9034, -15.404, 30.9034, 15.0474, 0.13649, 30.352, -30.3149, 15.2052 )
+polygon = PoolVector2Array( -63.7857, -24.1578, 0.237229, -48.1578, 64.2601, -24.1578, 64.2601, 23.8422, 0.237229, 47.8422, -63.7857, 23.8422 )
 
 [node name="ClaimedMark" parent="." instance=ExtResource( 7 )]
 visible = false
